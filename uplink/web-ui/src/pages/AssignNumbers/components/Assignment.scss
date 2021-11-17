@@ -1,0 +1,62 @@
+@import '../../../styles/variables';
+
+.assign-numbers-assignment {
+  position: relative;
+  &__phone-numbers {
+    z-index: 1,
+  }
+  &__empty-connection {
+    align-items: center;
+    border-radius: 100%;
+    border: 2px solid $grey;
+    cursor: pointer;
+    display: flex;
+    height: $s6;
+    justify-content: space-around;
+    margin-left: 142px;
+    position: relative;
+    width: $s6;
+  }
+  &__forwarded-number {
+    margin-left: 142px;
+    background: $tertiary;
+  }
+  &__row {
+    display: flex;
+    position: relative;
+    margin-bottom: $s3;
+    &:after {
+      content: '';
+      position: absolute;
+      border: 2px solid $tertiary;
+      border-style: dashed;
+      top: 22px;
+      left: 206px;
+      width: 134px;
+    }
+  }
+  &__item {
+    padding: 12px;
+    cursor: pointer;
+    color: $primary;
+    font-weight: normal;
+    &:hover {
+      background: $primary;
+    }
+  }
+  &__active-number {
+    position: absolute;
+    left: 165px;
+    top: 9px;
+    &-icon {
+      height: 30px;
+      width: 30px;
+      border: 2px solid $white;
+      border-radius: 100%;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: $red;
+    }
+  }
+}

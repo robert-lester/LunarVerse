@@ -1,0 +1,24 @@
+@import '../../../styles/variables';
+
+.lazy-loader {
+  .__fetch-button {
+    margin: auto;
+    margin-bottom: $s4;
+    &:last-of-type {
+      margin-top: $s4;
+      margin-bottom: 0;
+    }
+  }
+  .__backward-exhaust {
+    margin: auto;
+    padding: $s1;
+    height: 0;
+    opacity: 0;
+    transition: height 1s, opacity .5s ease-in;
+    width: fit-content;
+    &.--visible {
+      height: $s5;
+      opacity: 1;
+    }
+  }
+}

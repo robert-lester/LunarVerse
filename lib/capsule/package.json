@@ -1,0 +1,28 @@
+{
+  "name": "@launchthat/capsule",
+  "version": "1.6.1",
+  "description": "User authentication and controller validation tools 💊",
+  "main": "capsule.js",
+  "author": "Sean McMenamin <smcmenamin@belunar.com>",
+  "license": "ISC",
+  "scripts": {
+    "test": "./node_modules/.bin/nyc --reporter=html mocha",
+    "lint": "./node_modules/.bin/eslint src/Controller.js src/Scaffold.js src/UserAuthorizerFactory.js src/Validatable.js src/exceptions/AuthorizationException.js src/exceptions/ValidationException.js",
+    "document": "./node_modules/.bin/jsdoc src/Controller.js src/Scaffold.js src/UserAuthorizerFactory.js src/Validatable.js src/exceptions/AuthorizationException.js src/exceptions/ValidationException.js"
+  },
+  "dependencies": {
+    "joi": "^12.0.0",
+    "jsonwebtoken": "^8.1.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.2.1",
+    "babel-preset-env": "^1.6.1",
+    "chai": "^4.1.2",
+    "eslint": "^4.15.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "jsdoc": "^3.5.5",
+    "mocha": "^6.1",
+    "nyc": "^14.1"
+  }
+}

@@ -1,0 +1,13 @@
+@import '../../styles/variables';
+
+.sidebar {
+  background-color: $slate;
+  border-left: 1px solid $tertiary;
+  border-top: 1px solid $tertiary;
+  max-height: calc(100vh - 96px);
+  width: 320px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  overflow-y: scroll;
+}

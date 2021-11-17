@@ -1,0 +1,46 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.messages-aside {
+  &__data {
+    display: flex;
+    margin-left: 6px;
+    flex-direction: column;
+    line-height: $s2;
+    font-weight: 600;
+    color: $white;
+  }
+  &__user {
+    &-number {
+      display: flex;
+      align-items: center;
+      height: 54px;
+      cursor: pointer;
+      margin-left: -$s2;
+      margin-right: -$s2;
+      padding-left: $s2;
+      border-bottom: 1px solid $slate;
+      justify-content: space-between;
+      &:hover {
+        background-color: $lightSlate;
+      }
+    }
+    &-name {
+      width: 174px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    &-info {
+      display: flex;
+      align-items: center;
+    }
+    &--selected {
+      background-color: $lightSlate;
+    }
+  }
+  &__error-icon {
+    @include ERROR_ICON;
+    margin-right: $s2;
+  }
+}

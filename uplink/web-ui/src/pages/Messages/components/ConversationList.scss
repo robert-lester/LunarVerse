@@ -1,0 +1,69 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.messages-conversation-list {
+  width: 320px;
+  border-right: 1px solid $white4;
+  flex-shrink: 0;
+  position: relative;
+  .__actions {
+    background-color: $white4;
+    padding: 0 $s2;
+    height: $s8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .__logo {
+    width: 40px;
+    padding-top: 4px;
+    margin-right: 12px;
+    display: block;
+    path {
+      fill: $bPrimary !important;
+    }
+  }
+  .__title-icon {
+    @include CIRCLE_CONTAINER;
+    background-color: $bPrimary;
+  }
+  .__search {
+    flex: 1;
+    margin-right: $s1;
+  }
+  .__conversation {
+    padding: $s2;
+    background-color: $lightWhite;
+    border-bottom: 1px solid $white4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    &.--selected,
+    &:hover {
+      background-color: $lightHover;
+    }
+  }
+  .__user-name {
+    width: 216px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .__empty-message {
+    padding: $s2;
+  }
+  .__conversations {
+    overflow-y: scroll;
+    height: calc(100% - 64px);
+    padding-bottom: $s9;
+  }
+  .__refresh {
+    bottom: $s2;
+    display: flex;
+    justify-content: space-around;
+    position: fixed;
+    width: inherit;
+  }
+}

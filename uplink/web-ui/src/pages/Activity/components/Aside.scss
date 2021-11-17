@@ -1,0 +1,57 @@
+@import '../../../styles/variables';
+.activity-aside {
+  &__section-title {
+    margin-bottom: 18px;
+    font-weight: bold;
+  }
+  &__z-indexed {
+    z-index: 1,
+  }
+  &__filter {
+    color: $white;
+  }
+  &__user {
+    &-number {
+      display: flex;
+      align-items: center;
+      height: 54px;
+      cursor: pointer;
+      margin-left: -$s2;
+      margin-right: -$s2;
+      padding-left: $s2;
+      border-bottom: 1px solid $slate;
+      justify-content: space-between;
+      &:hover {
+        background-color: $lightSlate;
+      }
+    }
+    &-data {
+      display: flex;
+      flex-direction: column;
+      font-weight: 600;
+      color: $white;
+    }
+    &-name {
+      width: 184px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 600;
+      line-height: $s2;
+    }
+    &-info {
+      display: flex;
+      align-items: center;
+    }
+    &.--selected {
+      background-color: $lightSlate;
+    }
+  }
+  &__row {
+    display: flex;
+    align-items: center;
+  }
+  &__margin-right {
+    margin-right: 12px;
+  }
+}

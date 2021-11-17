@@ -1,0 +1,25 @@
+@import '../../../styles/variables';
+
+.assign-numbers-phone {
+  display: flex;
+  align-items: center;
+  border-radius: $s4;
+  height: $s6;
+  border: 2px solid $kindaGrey;
+  padding: $s1 $s1 $s1 $f2;
+  width: 204px;
+  &__icon {
+    border: 2px solid $kindaGrey;
+    height: $f14;
+    width: $f14;
+    color: $kindaGrey;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-right: $s2;
+  }
+  &__edit-icon {
+    margin: 0 0 0 auto;
+  }
+}

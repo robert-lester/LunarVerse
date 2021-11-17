@@ -1,0 +1,40 @@
+version: '2.1'
+services:
+  database:
+    image: 'mysql:5.7'
+    # The SQL mode reflects the mode used in the production environment. MySQL
+    # daemon will attempt to run a SQL script when it initializes.
+    command: [ '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci', '--sql-mode=NO_ENGINE_SUBSTITUTION', '--init-file=/docker-entrypoint-initdb.d/uplink_db_init.sql']
+    container_name: uplink.dev.db
+    volumes:
+      # The docker documentation indicates a container will automatically
+      # execute SQL and shell scripts stored at the docker entrypoint
+      # directory.
+      - ./test/integration/init:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: lunarrr0cks!!
+      MYSQL_DATABASE: uplink
+      MYSQL_USER: uplink
+      MYSQL_PASSWORD: lunarr0cks!!
+    ports:
+      - '3306:3306'
+    networks:
+      - net_test
+    healthcheck:
+      test: '/usr/bin/mysql -h172.201.1.1 --user=uplink --password="lunarr0cks!!" --execute "SHOW DATABASES;"'
+      interval: 5s
+      timeout: 20s
+      retries: 10
+  redis:
+    container_name: uplink.dev.redlock
+    image: 'redis:alpine'
+    ports:
+      - '127.0.0.1:6379:6379'
+
+networks:
+  net_test:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.201.1.0/24
+          gateway: 172.201.1.1

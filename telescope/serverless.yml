@@ -1,0 +1,217 @@
+service: telescope
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-east-1
+  versionFunctions: false
+  memorySize: 1024
+  timeout: 30
+  environment: ${file(../env.${self:custom.stage}.yml):SHUTTLE}
+  role: arn:aws:iam::911814384082:role/shuttle-${self:custom.stage}
+  deploymentBucket: telescope.${self:custom.stage}.cloudformation.template
+  # PRODUCTION VPC
+  # vpc:
+  #   securityGroupIds:
+  #     - sg-e470c392
+  #   subnetIds:
+  #     - subnet-738fa17f
+  #     - subnet-3513c00a
+  #     - subnet-1e968732
+  #     - subnet-3860dc5c
+  #     - subnet-89e9e3d3
+  #     - subnet-3e22f275
+
+  # STAGING, QA, DEMO, VPC
+  vpc:
+    securityGroupIds:
+      - sg-7bcd3a09
+    subnetIds:
+      - subnet-3e22f275
+      - subnet-89e9e3d3
+
+custom:
+  webpackIncludeModules:
+    packagePath: './package.json'
+  customDomain:
+    domainName: ${file(../env.${self:custom.stage}.yml):CORE.API_DOMAIN}
+    basePath: telescope
+    stage: ${self:custom.stage}
+    createRoute53Record: true
+  env: ${file(../env.${self:custom.stage}.yml):TELESCOPE}
+  stage: ${opt:stage, self:provider.stage}
+
+plugins:
+  - serverless-domain-manager
+  - serverless-offline
+  - serverless-webpack
+
+functions:
+  # getSites:
+  #   handler: handler.getSites
+  #   events:
+  #     - http:
+  #         path: /sites
+  #         method: get
+  #         cors:
+  #           origins:
+  #             - '*'
+  #           headers:
+  #             - Content-Type
+  #             - X-Amz-Date
+  #             - Authorization
+  #             - X-Api-Key
+  #             - X-Amz-Security-Token
+  #             - X-Amz-User-Agent
+  #             - charset
+  createSite:
+    handler: handler.createSite
+    events:
+      - http:
+          path: /sites
+          method: post
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+  # readSite:
+  #   handler: handler.readSite
+  #   events:
+  #     - http:
+  #         path: /sites/{siteId}
+  #         method: get
+  #         cors:
+  #           origins:
+  #             - '*'
+  #           headers:
+  #             - Content-Type
+  #             - X-Amz-Date
+  #             - Authorization
+  #             - X-Api-Key
+  #             - X-Amz-Security-Token
+  #             - X-Amz-User-Agent
+  #             - charset
+  # updateSite:
+  #   handler: handler.updateSite
+  #   events:
+  #     - http:
+  #         path: /sites/{siteId}
+  #         method: patch
+  #         cors:
+  #           origins:
+  #             - '*'
+  #           headers:
+  #             - Content-Type
+  #             - X-Amz-Date
+  #             - Authorization
+  #             - X-Api-Key
+  #             - X-Amz-Security-Token
+  #             - X-Amz-User-Agent
+  #             - charset
+  # readVisitor:
+  #   handler: handler.readVisitor
+  #   events:
+  #     - http:
+  #         path: /visitors/{visitorId}
+  #         method: get
+  #         cors:
+  #           origins:
+  #             - '*'
+  #           headers:
+  #             - Content-Type
+  #             - X-Amz-Date
+  #             - Authorization
+  #             - X-Api-Key
+  #             - X-Amz-Security-Token
+  #             - X-Amz-User-Agent
+  #             - charset
+  # readVisitorVisits:
+  #   handler: handler.readVisitorVisits
+  #   events:
+  #     - http:
+  #         path: /visitors/{visitorId}/visits
+  #         method: get
+  #         cors:
+  #           origins:
+  #             - '*'
+  #           headers:
+  #             - Content-Type
+  #             - X-Amz-Date
+  #             - Authorization
+  #             - X-Api-Key
+  #             - X-Amz-Security-Token
+  #             - X-Amz-User-Agent
+  #             - charset
+  readVisit:
+    handler: handler.readVisit
+    events:
+      - http:
+          path: /visits/{visitId}
+          method: get
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+  intake:
+    handler: handler.intake
+    events:
+      - http:
+          path: /intake/load
+          method: post
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+      - http:
+          path: /intake/page
+          method: post
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+      - http:
+          path: /intake
+          method: post
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+    # PRODUCTION/QA
+    # reservedConcurrency: 1000
+    # DEMO/STAGING
+    reservedConcurrency: 200

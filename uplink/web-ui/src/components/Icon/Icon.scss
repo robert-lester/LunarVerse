@@ -1,0 +1,33 @@
+@import '../../styles/variables';
+
+.l-icon {
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  font-size: inherit;
+  color: inherit;
+  &.--dark {
+    color: $black;
+  }
+  &.--twilight {
+    color: $secondary;
+  }
+  &.--light {
+    color: $white;
+  }
+  &.--xsmall {
+    font-size: $f6;
+  }
+  &.--small {
+    font-size: $f8;
+  }
+  &.--medium {
+    font-size: $f11;
+  }
+  &.--large {
+    font-size: $f13;
+  }
+  &.--xlarge {
+    font-size: $f17;
+  }
+}

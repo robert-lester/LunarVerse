@@ -1,0 +1,43 @@
+# package directories
+node_modules
+jspm_packages
+
+# Serverless directories
+.serverless
+.webpack
+.cache-loader
+
+# Environment variables
+env.*.yml
+env.cli
+!env.sample.yml
+
+# Build directories
+build/package
+build/dist
+
+# User generated
+.idea
+docs
+coverage
+.nyc_output
+
+# Offline Tooling
+db-offline.log
+sls-offline.log
+sls-offline.pid
+
+# Misc
+*.DS_Store
+
+# Error logs
+yarn-error.log
+
+# Scripts Symbolic Link
+scripts/slsdeploy
+src/lib/lambda-context
+
+# The knex CLI wrapper generates connection information taken from uplink env
+# files. Do not store plain-text credentials in the repo.
+src/database/knexfile.js
+

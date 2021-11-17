@@ -1,0 +1,22 @@
+@import '../../../styles/variables';
+
+.activity-chart {
+  position: relative;
+  padding: $s3 $s3 $s3 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: calc(100% - 64px);
+  &__no-data {
+    position: absolute;
+    top: 50%;
+    left: 40%;
+  }
+  &__total {
+    display: flex;
+    align-items: center;
+    &-count {
+      margin: 0 $s1 0 $s5;
+      color: $secondary;
+    }
+  }
+}

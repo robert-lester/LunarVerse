@@ -1,0 +1,31 @@
+{
+  "name": "lunar-apps-telescope-api",
+  "version": "1.2.0",
+  "description": "Telescope API for Lunar services",
+  "main": "index.js",
+  "author": "Sean McMenamin <smcmenamin@belunar.com>",
+  "license": "ISC",
+  "dependencies": {
+    "joi": "^12.0.0",
+    "knex": "^0.15.2",
+    "mysql": "^2.15.0",
+    "parse-domain": "^1.1.0",
+    "ua-parser-js": "^0.7.17",
+    "uuid": "^3.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.48",
+    "@babel/preset-env": "^7.0.0-beta.48",
+    "babel-loader": "^8.0.0-beta.3",
+    "fork-ts-checker-webpack-plugin": "^0.4.2",
+    "hard-source-webpack-plugin": "^0.10.1",
+    "serverless-domain-manager": "^2.4.0",
+    "serverless-offline": "^3.25.4",
+    "serverless-webpack": "^5.1.5",
+    "ts-loader": "^4.5.0",
+    "tslint": "^5.0.0",
+    "typescript": "^2.1.0",
+    "webpack": "^4.11.1",
+    "webpack-node-externals": "^1.7.2"
+  }
+}

@@ -1,0 +1,13 @@
+@import '../../styles/variables';
+
+.settings {
+  display: flex;
+  width: 100%;
+  .__subtitle {
+    margin-bottom: $s3;
+    color: $kindaGrey;
+  }
+  .__subsection {
+    margin: $s2 0 $s3 $s3;
+  }
+}

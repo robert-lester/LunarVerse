@@ -1,0 +1,17 @@
+@import '../../styles/variables';
+
+.l-filter-group {
+  padding: $s1 $s2 0 $s2;
+  display: flex;
+  flex-wrap: wrap;
+  .l-chip {
+    margin-right: $s1;
+    margin-bottom: $s1;
+    &:first-child {
+      margin-right: $s1;
+    }
+    &:last-child {
+      margin: 0;
+    }
+  }
+}

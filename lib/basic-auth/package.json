@@ -1,0 +1,9 @@
+{
+  "name": "basic-auth",
+  "version": "1.0.0",
+  "description": "Simple utility for encoding and decoding Basic Authentication headers",
+  "main": "index.ts",
+  "author": "Sean McMenamin <smcmenamin@belunar.com>",
+  "license": "MIT",
+  "private": true
+}

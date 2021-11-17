@@ -1,0 +1,88 @@
+// Brand Colors
+$bPrimary: rgba(0, 73, 160, 1);
+$bSecondary: rgba(51, 195, 255, 1);
+
+// Colors
+$primary: rgba(52, 52, 52, 1);
+$secondary: rgba(128, 128, 128, 1);
+$tertiary: rgba(216, 216, 216, 1);
+$error: rgba(217, 83, 79, 1);
+$success: rgba(76, 175, 80, 1);
+$warning: rgba(255, 159, 1, 1);
+$information: rgba(24, 118, 210, 1);
+$lightHover: rgba(8, 76, 127, .15);
+$outline: rgba(158, 158, 158, 1);
+
+// General Colors
+$white: rgba(255, 255, 255, 1);
+$white4: rgba(232, 232, 232, 1);
+$lightWhite: rgba(242, 242, 242, 1);
+$kindaWhite: rgba(240, 240, 240, 1);
+$offWhite: rgba(255, 255, 255, .9);
+$black: rgba(50, 50, 50, 1);
+$slate: rgba(36, 44, 51, 1);
+$offSlate: rgba(31, 38, 44, 1);
+$lightSlate: rgba(50, 60, 68, 1);
+$lightGrey: rgba(232, 234, 237, 1);
+$kindaGrey: rgba(155, 155, 155, 1);
+$darkGrey: rgba(74, 74, 74, 1);
+
+// Material Colors
+$red : rgba(244,67,54,1);
+$pink: rgba(233,30,99,1);
+$purple: rgba(156,39,176,1);
+$deepPurple: rgba(103,58,183,1);
+$indigo: rgba(63,81,181,1);
+$blue: rgba(33,150,243,1);
+$lightBlue: rgba(3,169,244,1);
+$cyan: rgba(0,188,212,1);
+$teal: rgba(0,150,136,1);
+$green: rgba(76,175,80,1);
+$lightGreen: rgba(139,195,74,1);
+$lime: rgba(205,220,57,1);
+$yellow: rgba(255,235,59,1);
+$amber: rgba(255,193,7,1);
+$orange: rgba(255,152,0,1);
+$deepOrange: rgba(255,87,34,1);
+$brown: rgba(121,85,72,1);
+$grey: rgba(158,158,158,1);
+$blueGrey: rgba(96,125,139,1);
+
+// General Pixel Sizes
+$s1: 8px;
+$s2: 16px;
+$s3: 24px;
+$s4: 32px;
+$s5: 40px;
+$s6: 48px;
+$s7: 56px;
+$s8: 64px;
+$s9: 72px;
+$s10: 80px;
+$s11: 88px;
+$s12: 96px;
+
+// Font Sizes
+$f1: .25rem; //4px
+$f2: .375rem; //6px
+$f3: .5rem; //8px
+$f4: .625rem; //10px
+$f5: .6875rem; //11px
+$f6: .75rem; //12px
+$f7: .875rem; //14px
+$f8: 1rem; //16px
+$f9: 1.125rem; //18px
+$f10: 1.25rem; //20px
+$f11: 1.5rem; //24px
+$f12: 1.75rem; //28px
+$f13: 2rem; //32px
+$f14: 2.25rem; //36px
+$f15: 2.5rem; //40px
+$f16: 3rem; //48px
+$f17: 3.75rem; //60px
+$f18: 4rem; //64px
+$f19: 4.375rem; //70px
+$f20: 6.25rem; //84px
+$f21: 10rem;
+
+$shadow: 0 3px 3px $secondary;

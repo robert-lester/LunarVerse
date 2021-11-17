@@ -1,0 +1,12 @@
+@import '../../styles/variables';
+
+.l-unassigned-phone {
+  border: 1px solid $secondary;
+  height: $f14;
+  width: $f14;
+  border-radius: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin-right: $s2;
+}

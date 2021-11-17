@@ -1,0 +1,13 @@
+@import '../../../styles/variables';
+
+.assign-numbers-assignments {
+  &__filter {
+    margin-right: 112px;
+    width: 236px;
+  }
+  &__actions {
+    padding-bottom: 30px;
+    display: flex;
+    align-items: center;
+  }
+}

@@ -1,0 +1,43 @@
+@import '../../../styles/variables';
+
+.integration {
+  margin-top: $s10;
+  .__subsection {
+    .l-switch {
+      margin-bottom: $s2;
+    }
+  }
+  .--urgent {
+    color: $red;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .__save {
+    margin-right: $s2;
+  }
+  .__token-section {
+    position: relative;
+    cursor: pointer;
+    &:hover .__copy-icon {
+      opacity: 1;
+    }
+  }
+  .__token-text {
+    font-size: $f7;
+    font-weight: 400;
+    margin-bottom: $s2;
+  }
+  .__copy-icon {
+    position: absolute;
+    top: 2px;
+    left: 265px;
+    opacity: 0;
+  }
+  &__loading {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+}

@@ -1,0 +1,64 @@
+@import '../../styles/variables';
+
+.l-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 $s4;
+  cursor: pointer;
+  border-radius: $s2;
+  border: 1px solid;
+  &.--primary {
+    background: $bPrimary;
+    color: $white;
+    border-color: $bPrimary;
+  }
+  &.--secondary {
+    background: transparent;
+    color: $secondary;
+    border-color: $secondary;
+    .__label {
+      color: $secondary;
+    }
+  }
+  &.--danger {
+    color: $white;
+    border-color: $red;
+    background: $red;
+  }
+  &.--text-only {
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    &.--danger {
+      .__label {
+        color: $red;
+      }
+    }
+  }
+  &.--outline {
+    background: $white;
+    .__label {
+      color: $bPrimary;
+    }
+    &.--danger {
+      .__label {
+        color: $red;
+      }
+    }
+  }
+  .__label {
+    display: flex;
+    line-height: $s4;
+    align-Items: center;
+    color: $white;
+    font-size: $f7;
+    font-Weight: bold;
+  }
+  .__icon {
+    margin-right: $s1;
+  }
+  .__loading {
+    margin-Left: $s1;
+  }
+}

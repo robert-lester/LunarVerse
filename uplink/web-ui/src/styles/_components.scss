@@ -1,0 +1,39 @@
+.tooltip {
+  &__text {
+    padding: 0px 5px;
+    background: rgba(0, 0, 0, .85);
+    border-radius: 6px;
+    color: white;
+    font-size: 11px;
+    position: absolute;
+    width: fit-content;
+    margin-top: -5px;
+    opacity: 0;
+    transition: all .25s ease-in;
+  }
+  &__hover-element {
+    &:hover {
+      + .tooltip__text {
+        opacity: 1;
+        margin-top: 5px;
+      }
+    }
+  }
+}
+
+.user {
+  @include ROUNDED_DATA_CONTAINER;
+  width: 408px;
+  position: relative;
+  cursor: pointer;
+  &:hover {
+    .editIcon {
+      opacity: 1;
+    }
+  }
+}
+
+.editIcon {
+  margin: 0 12px 0 auto;
+  opacity: 0;
+}

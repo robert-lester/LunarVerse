@@ -1,0 +1,16 @@
+{
+  "name": "lambda-context",
+  "version": "1.1.1",
+  "description": "TypeScript utilities for building Web applications easier in the Lambda ecosystem",
+  "main": "index.ts",
+  "author": "Sean McMenamin <smcmenamin@belunar.com>",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.19"
+  },
+  "dependencies": {
+    "aws-lambda": "^0.1.2",
+    "minimatch": "^3.0.4"
+  }
+}

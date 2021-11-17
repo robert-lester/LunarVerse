@@ -1,0 +1,10 @@
+@import '../../styles/variables';
+
+.l-card {
+  background: $white;
+  padding: $s3;
+  box-shadow: $shadow;
+  border-radius: 4px;
+  width: 100%;
+  border: 1px solid $kindaWhite;
+}

@@ -1,0 +1,8 @@
+@import '../../styles/variables';
+.assign-numbers {
+  display: flex;
+  width: 100%;
+  .__save {
+    margin-right: $s2;
+  }
+}

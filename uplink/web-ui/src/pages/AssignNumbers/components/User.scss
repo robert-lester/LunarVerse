@@ -1,0 +1,40 @@
+@import '../../../styles/variables';
+
+.assign-numbers-user {
+  align-items: center;
+  border-radius: $s4;
+  border: 2px solid $grey;
+  color: $black;
+  display: flex;
+  font-weight: lighter;
+  height: $s6;
+  margin-left: 142px;
+  overflow: hidden;
+  padding: $s1 $s1 $s1 $f2;
+  position: relative;
+  white-space: nowrap;
+  width: 308px;
+  &__details {
+    display: flex;
+    align-items: center;
+  }
+  &__data {
+    margin-right: $s1;
+    display: flex;
+    align-items: center;
+    .l-icon {
+      margin-right: $s1;
+    }
+  }
+  &__position {
+    font-size: 12px;
+    margin-left: $s1;
+    color: $bPrimary;
+  }
+  &__edit-icon {
+    margin: 0 0 0 auto;
+  }
+  &__button {
+    margin: 0 8px 0 0;
+  }
+}

@@ -1,0 +1,52 @@
+@import '../../styles/variables';
+
+.l-input {
+  box-sizing: border-box;
+  position: relative;
+  .__extraneous {
+    padding: 2px 0 0 0;
+    height: $s1;
+  }
+  .__container {
+    position: relative;
+  }
+  .__counter {
+    float: right;
+    font-size: $f5;
+    font-weight: normal;
+    color: $secondary;
+  }
+  .__element {
+    box-sizing: border-box;
+    width: 100%;
+    line-height: 34px;
+    padding: 0 14px 0 14px;
+    border: 1px solid $outline;
+    border-radius: 4px;
+    color: $primary;
+    font-size: $f7;
+    font-weight: normal;
+    min-height: $f14;
+    &:placeholder {
+      color: $tertiary;
+    }
+  }
+  .__error {
+    font-size: $f5;
+    color: $error;
+  }
+  .__validation {
+    position: absolute;
+    top: $f2;
+    right: $s1;
+    .--pass {
+      color: $green;
+    }
+    .--fail {
+      color: $red;
+    }
+    .--incomplete {
+      color: $grey;
+    }
+  }
+}

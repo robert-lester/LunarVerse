@@ -1,0 +1,29 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.l-list-icon {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px 6px 12px;
+  cursor: pointer;
+  &:hover {
+    background-color: #D8D8D8;
+  }
+  &__icon {
+    @include CIRCLE_CONTAINER_SMALL;
+    flex-shrink: 0;
+    background-color: inherit;
+    &.--primary {
+      background-color: $bPrimary;
+    }
+    &.--secondary {
+      background-color: $darkGrey;
+    }
+    &.--error {
+      background-color: $error;
+    }
+  }
+  &__label {
+    font-size: $f7;
+  }
+}

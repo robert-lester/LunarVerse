@@ -1,0 +1,21 @@
+@import '../../styles/variables';
+
+.l-checkbox {
+  box-sizing: border-box;
+  display: flex;
+  &__label {
+    color: $primary;
+    font-size: $f7;
+    font-weight: 'regular';
+    margin: 0 0 0 $s1;
+  }
+  &__icon {
+    width: $s3;
+    height: $s3;
+    font-size: $s3;
+    color: $secondary;
+    &--checked {
+      color: $primary;
+    }
+  }
+}

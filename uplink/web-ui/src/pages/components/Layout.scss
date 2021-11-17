@@ -1,0 +1,13 @@
+@import '../../styles/variables';
+
+.layout {
+  width: calc(100% - #{$s8});
+  margin-left: $s8;
+  display: flex;
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: hidden;
+  &__saving {
+    padding: $s2 0 0 0;
+  }
+}

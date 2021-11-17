@@ -1,0 +1,8 @@
+{
+  "name": "uplink",
+  "version": "1.6.2",
+  "description": "Reach customers directly from your phone’s text messaging app and visualize the conversation in Salesforce.",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true
+}

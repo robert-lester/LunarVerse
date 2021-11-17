@@ -1,0 +1,35 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.l-phone-type {
+  &.--regular {
+    @include CIRCLE_CONTAINER;
+    color: $white;
+    margin-right: $s2;
+    flex-shrink: 0;
+    font-size: $f8;
+    font-weight: bold;
+  }
+  &.--small {
+    @include CIRCLE_CONTAINER_SMALL;
+    margin-right: $s1;
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  &.--unassigned {
+    border: 1px solid $darkGrey;
+    .l-icon {
+      color: $darkGrey;
+    }
+  }
+  &.--user,
+  &.--forward,
+  &.--contact,
+  &.--recycled {
+    background: $darkGrey;
+    .l-icon {
+      color: $white;
+    }
+  }
+}

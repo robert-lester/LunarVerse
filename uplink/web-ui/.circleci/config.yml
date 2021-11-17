@@ -1,0 +1,23 @@
+version: 3
+jobs:
+  build:
+    working_directory: ~/uplink-ui
+    docker:
+      - image: circleci/node:8
+    steps:
+      - checkout
+      - restore_cache:
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install yarn 1.9.4
+          command: sudo npm install -g yarn@1.9.4
+      - run:
+          name: Install Dependencies
+          command: node --version; yarn --version; yarn install --frozen-lockfile
+      - save_cache:
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - /home/circleci/.npm
+      - run:
+          name: Run Tests
+          command: CI=true yarn test --runInBand 

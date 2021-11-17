@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es6",
+    "removeComments": false,
+    "typeRoots": ["node_modules/@types/", "src/@types/"],
+    "lib": ["es2017", "esnext.asynciterable", "dom"],
+    "allowJs": false,
+    "sourceMap": true,
+    "declaration": true,
+    "noEmitOnError": true,
+    "outDir": "build/dist",
+    "baseUrl": ".",
+    "paths": {
+      "@uplinkapi/*": [ "*" ],
+      "@uplink/*": [ "../*" ],
+      "@lunarcore/*": [ "../../core/*"],
+      "@lunarlib/*": [ "../../lib/*"],
+      "@src/*": [ "src/*"],
+      "@lib/*": [ "src/lib/*"],
+      "@models/*": [ "src/models/*"],
+      "@controllers/*": [ "src/controllers/*"],
+      "@httpserver/*": [ "src/server/*"],
+      "@exceptions/*": ["src/api/exceptions/*"]
+    }
+  },
+  "include": ["./src/**/*"],
+  "exclude": ["node_modules/**", ".serverless", ".webpack"]
+}

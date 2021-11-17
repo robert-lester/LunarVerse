@@ -1,0 +1,25 @@
+@import '../../styles/variables';
+
+.l-boolean-chip {
+  border-radius: $s2;
+  border: 1px solid $white;
+  box-sizing: border-box;
+  color: $white;
+  font-size: $f8;
+  font-weight: 600;
+  height: $s4;
+  overflow: hidden;
+  padding: 0 $s3;
+  position: relative;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: fit-content;
+  line-height: $f12;
+  cursor: pointer;
+  transition: background-color 0.1s ease-in;
+  &:hover,
+  &.--active {
+    background-color: $white;
+    color: $black;
+  }
+}

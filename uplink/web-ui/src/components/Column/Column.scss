@@ -1,0 +1,26 @@
+@import '../../styles/variables';
+
+.l-column {
+  display: inline-block;
+  vertical-align: top;
+  &--small {
+    width: 10%;
+    &.l-column--skip- {
+      &1 {
+        margin-left: 10%;
+      }
+      &2 {
+        margin-left: 20%;
+      }
+    }
+  }
+  &--medium {
+    width: 25%;
+  }
+  &--large {
+    width: 50%;
+  }
+  &--full {
+    width: 100%;
+  }
+}

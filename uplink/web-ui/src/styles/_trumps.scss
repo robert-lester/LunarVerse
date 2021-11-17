@@ -1,0 +1,55 @@
+@import './variables';
+
+.DateRangePicker {
+  &_picker {
+    z-index: 2;
+    .CalendarDay {
+      &__selected_span {
+        background: $bSecondary;
+        border-color: $bSecondary;
+      }
+      &__selected {
+        background: $bPrimary;
+        border-color: $bPrimary;
+        &_end {
+          background: $bPrimary;
+          border-color: $bPrimary;
+        }
+      }
+      &__hovered {
+        &_span {
+          background: $bSecondary;
+          border-color: $bSecondary;
+          color: white;
+        }
+      }
+    }
+  }
+  div.DateRangePickerInput {
+      background-color: transparent;
+      .DateInput {
+          background: none;
+          &_input {
+              background: none;
+              font-size: 16px;
+              color: white;
+              padding: 0;
+              border: 0;
+              &__focused {
+                  background: none;
+                  border: none;
+              }
+              &__small {
+                  line-height: inherit;
+              }
+          }
+      }
+      &_arrow {
+          display: none;
+      }
+  }
+}
+
+.recharts-default-tooltip {
+  border-radius: 10px;
+}

@@ -1,0 +1,17 @@
+# package directories
+node_modules
+*.log
+
+# lock files
+package-lock.json
+
+# code coverage
+.nyc_output
+coverage
+out
+
+# environment
+env.json
+
+# hidden knexfile
+__knexfile.js

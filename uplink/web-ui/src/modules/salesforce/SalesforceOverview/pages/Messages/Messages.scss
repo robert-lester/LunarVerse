@@ -1,0 +1,40 @@
+@import '../../../../../styles/variables';
+
+div#tm-messages {
+  padding: 0;
+}
+
+.sf-messages {
+  height: calc(100vh - 64px);
+  display: flex;
+  .__back-to-conversations {
+    width: 100%;
+    display: none;
+    background-color: $white4;
+    padding: 0 $s2;
+    height: $s8;
+    align-items: center;
+    z-index: 1;
+  }
+  .__arrow-back {
+    margin-right: $s2;
+  }
+  .__conversation {
+    flex-grow: 1;
+    overflow: hidden;
+  }
+  .messages-conversation__messages {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .sf-messages {
+    .__back-to-conversations {
+      display: flex;
+    }
+  }
+  .media {
+    max-width: 100%;
+  }
+}

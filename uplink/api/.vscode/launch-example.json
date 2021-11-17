@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "protocol": "inspector",
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Staging Offline",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/node_modules/.bin/sls",
+            "args": [
+                "offline",
+                "-s staging",
+                "-P 3001",
+                "--noAuth"
+            ],
+            "env": {
+                "SLS_DEBUG": "*",
+                "NODE_ENV": "staging"
+            },
+            "outFiles": [ 
+                "${workspaceFolder}/build/dist/**/src/handlers/*.js.map",
+                "${workspaceFolder}/build/dist/api/src/handlers/*.js.map",
+                "${workspaceFolder}/build/dist/intake/src/handlers/*.js.map",
+                "${workspaceFolder}/build/dist/userNumbers/src/handlers/*.js.map",
+                "${workspaceFolder}/build/dist/authorizer/src/handlers/*.js.map",
+             ],
+            "sourceMaps": true
+        }
+    ]
+}

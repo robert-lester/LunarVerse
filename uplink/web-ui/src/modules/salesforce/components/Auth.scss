@@ -1,0 +1,28 @@
+@import '../../../styles/variables';
+
+.sf-auth {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 $s3;
+  &__message {
+    width: auto;
+  }
+}
+.sf-uplink {
+  background: $white;
+}
+
+.sf-default-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  text-align: center;
+  height: 100vh;
+  color: $primary;
+  font-weight: bold;
+  padding: 0 $s2;
+}

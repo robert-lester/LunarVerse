@@ -1,0 +1,32 @@
+@import '../../styles/variables';
+
+.error {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $bPrimary;
+  * {
+    color: $white;
+  }
+  .__wrap {
+    text-align: center;
+    margin: 0 0 96px 0;
+    color: $white;
+  }
+  .__back {
+    display: flex;
+    justify-content: space-around;
+    margin: $s4 0;
+    &-button.l-button {
+      border-color: $white;
+      .__label {
+        color: $white;
+      }
+    }
+  }
+}

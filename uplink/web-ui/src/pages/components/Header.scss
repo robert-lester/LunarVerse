@@ -1,0 +1,16 @@
+@import '../../styles/variables';
+
+.header {
+  align-items: center;
+  background-color: $white;
+  display: flex;
+  flex-wrap: wrap;
+  height: $s8;
+  padding: 0 $s3;
+  position: fixed;
+  right: 0;
+  top: 0;
+  transition: left 200ms ease-out;
+  width: calc(100% - 364px);
+  z-index: 1;
+}

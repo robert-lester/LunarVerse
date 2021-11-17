@@ -1,0 +1,112 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.messages-message {
+  display: flex;
+  margin: $s1 $s10 $s2 $s1;
+  position: relative;
+  .__dialogue {
+    border: 1px solid $kindaWhite;
+    padding: $s2;
+    background-color: $kindaWhite;
+    border-radius: $s2;
+  }
+  .__reverse {
+    &-dialogue {
+      background-color: $kindaWhite;
+    }
+    &-initials.l-user-initials {
+      margin-right: 0;
+      margin-left: $s2;
+    }
+    &-date {
+      text-align: right;
+    }
+  }
+  &.__reverse-message {
+    flex-direction: row-reverse;
+    margin: $s1 $s1 $s1 $s2;
+  }
+  .__phone-call {
+    display: flex;
+    align-items: center;
+  }
+  .__phone-call-info {
+    display: block;
+    font-size: $f7;
+    padding-left: $s2;
+  }
+  .__phone-call-duration {
+    font-size: $f6;
+  }
+  .__message-text {
+    position: relative;
+  }
+  .__text {
+    max-width: calc(100% - 52px);
+  }
+  .__media-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  &__reassign-user-text {
+    padding: 0 12px;
+    background-color: $white;
+    width: max-content;
+    color: $primary;
+    font-weight: bold;
+    margin: $s2 auto;
+    text-align: center;
+    width: fit-content;
+    &:before {
+      content: '';
+      width: 100vw;
+      height: 1px;
+      background: $kindaGrey;
+      position: absolute;
+      left: 0;
+      margin-top: 10px;
+      z-index: -1;
+    }
+  }
+  &__links {
+    color: $bPrimary;
+    font-weight: bold;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  .__media {
+    max-width: 100%;
+    margin-bottom: $s1;
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+    video {
+      width: 100%;
+    }
+  }
+  img {
+    max-height: 400px;
+  }
+  .__link {
+    text-decoration: underline;
+    color: $bPrimary;
+  }
+  .__contact-uplink {
+    @include CIRCLE_CONTAINER;
+    margin-right: $s2;
+    flex-shrink: 0;
+    font-size: $f8;
+    font-weight: bold;
+    background: $darkGrey;
+    svg {
+      height: $s2;
+      width: $s2;
+      path {
+        fill: $white;
+      }
+    }
+  }
+}

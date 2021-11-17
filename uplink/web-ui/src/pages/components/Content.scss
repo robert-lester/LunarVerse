@@ -1,0 +1,14 @@
+@import '../../styles/variables';
+
+.content {
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: scroll;
+  padding: $s3 $s3 $s8 $s3;
+  background: $kindaWhite;
+  width: 100%;
+  z-index: 0;
+  &.--pushed {
+    margin-top: $s8;
+  }
+}

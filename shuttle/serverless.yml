@@ -1,0 +1,402 @@
+service: shuttle
+provider:
+  name: aws
+  runtime: nodejs8.10
+  profile: ${self:custom.profiles.${self:provider.stage}}
+  stage: staging
+  region: us-east-1
+  versionFunctions: false
+  memorySize: 1024
+  timeout: 30
+  environment: ${file(../config/${self:custom.stage}/env.yml):SHUTTLE}
+  role: arn:aws:iam::911814384082:role/shuttle-${self:custom.stage}
+  deploymentBucket: shuttle.${self:custom.stage}.cloudformation.template
+  vpc:
+    securityGroupIds: ${file(../config/${self:custom.stage}/security-groups.yml)}
+    subnetIds: ${file(../config/${self:custom.stage}/subnets.yml)}
+
+custom:
+  webpack:
+    webpackConfig: 'webpack.config.js'
+    includeModules:
+      forceInclude:
+        - knex
+        - mysql
+      forceExclude:
+        - aws-sdk
+  customDomain:
+    domainName: ${file(../config/${self:custom.stage}/env.yml):SHUTTLE.API_DOMAIN}
+    basePath: shuttle
+    stage: ${self:custom.stage}
+    createRoute53Record: true
+  env: ${file(../config/${self:custom.stage}/env.yml):SHUTTLE}
+  stage: ${opt:stage, self:provider.stage}
+  profiles:
+    demo: default
+    production: default
+    qa: default
+    staging: default
+
+plugins:
+  - serverless-domain-manager
+  - serverless-offline
+  - serverless-webpack
+
+functions:
+  cognitoAuthorizer:
+    handler: api/auth.authorizer
+  sheetsOauth:
+    handler: api/handlers/SheetsOAuthHandler.handler
+    events:
+      - http:
+          path: destinations/oauth/google/sheets
+          method: GET
+          cors:
+            allowCredentials: false
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+  destinations:
+    handler: api/handlers/DestinationHandler.handler
+    events:
+      - http:
+          path: destinations
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          path: destinations/{route+}
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  relays:
+    handler: api/handlers/RelayHandler.handler
+    events:
+      - http:
+          path: relays
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          path: relays/{route+}
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  pods:
+    handler: api/handlers/PodHandler.handler
+    events:
+      - http:
+          path: pods
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          path: pods/{route+}
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  sources:
+    handler: api/handlers/SourceHandler.handler
+    events:
+      - http:
+          path: sources
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          path: sources/{route+}
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  tags:
+    handler: api/handlers/TagHandler.handler
+    events:
+      - http:
+          path: tags
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          path: tags/{route+}
+          authorizer: cognitoAuthorizer
+          method: ANY
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  sites:
+    handler: api/handlers/SiteHandler.handler
+    events:
+      - http:
+          authorizer: cognitoAuthorizer
+          path: sites
+          method: post
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  visits:
+    handler: api/handlers/VisitHandler.handler
+    events:
+      - http:
+          authorizer: cognitoAuthorizer
+          path: visits/{visitId}
+          method: get
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  tracking:
+    handler: api/handlers/tracking/TrackingIntakeHandler.handler
+    events:
+      - http:
+          path: tracking/intake
+          method: post
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  intake:
+    handler: intake/Handler.intake
+    # PRODUCTION/QA
+    # reservedConcurrency: 500
+    # DEMO/STAGING
+    reservedConcurrency: 100
+    events:
+      - http:
+          path: intake/{route+}
+          method: post
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          path: intake
+          method: post
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          path: /
+          method: post
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  resend:
+    handler: intake/Handler.resend
+    events:
+      - http:
+          authorizer: cognitoAuthorizer
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+          method: post
+          path: /intake/resend
+          

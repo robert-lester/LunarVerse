@@ -1,0 +1,193 @@
+service: uplink-api
+provider:
+  name: aws
+  stage: qa
+  runtime: nodejs10.x
+  profile: ${self:custom.profiles.${self:custom.stage}}
+  region: us-east-1
+  versionFunctions: false
+  memorySize: 1024
+  timeout: 30
+  deploymentBucket: ${self:custom.env.BUCKET_BASE}.${self:custom.stage}.cloudformation.template
+  environment: ${file(../../config/${self:custom.stage}/env.yml):UPLINK}
+  role: ${self:custom.env.AWS_ARN_BASE}:role/uplink-${self:custom.stage}
+  vpc:
+    securityGroupIds: ${file(../../config/${self:custom.stage}/security-groups.yml)}
+    subnetIds: ${file(../../config/${self:custom.stage}/subnets.yml)}
+
+custom:
+  env: ${file(../../config/${self:custom.stage}/env.yml):UPLINK}
+  serverless-offline:
+      port: 3001
+  customDomain:
+    domainName: ${self:custom.env.API_DOMAIN}
+    basePath: ${self:custom.env.BASE_PATH}
+    stage: ${self:custom.stage}
+    createRoute53Record: ${self:custom.env.CREATE_ROUTE_53_RECORD}
+    enabled: ${self:custom.env.CREATE_CUSTOM_DOMAIN}
+  stage: ${opt:stage, self:provider.stage}
+  webpack:
+    webpackConfig: 'webpack.config.js'
+    includeModules:
+      forceInclude:
+        - knex
+        - mysql
+      forceExclude:
+        - aws-sdk
+    packager: 'npm'
+    packagerOptions:
+      scripts: 
+        # rebuild grpc MOST LIKELY downloads a pre-built native extension targeting the Lambda platform
+        # Otherwise, the native extension must be built using the lambci/lambda docker image.
+        - npm rebuild grpc --target=8.12.0 --target_arch=x64 --target_platform=linux --target_libc=glibc
+  slack:
+    # Configuration Description - https://github.com/awkward/serverless-plugin-slack
+    webhook_url: https://hooks.slack.com/services/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
+  profiles:
+    demo: default
+    production: default
+    qa: default
+    staging: default
+    test: default
+    integration: default
+    uplink-prod: uplink
+
+plugins:
+  - serverless-domain-manager
+  - serverless-mocha-plugin
+  - serverless-webpack
+  - serverless-offline
+  # Serverless Offline Scheduler requires specifying the path to handler source
+  # e.g. 'sls offline --noAuth --stage=test start --location ./build/dist/service'
+  - serverless-offline-scheduler
+  - serverless-plugin-slack
+
+package:
+  individually: true
+  exclude:
+    - config/${self:custom.stage}/env.yml
+
+functions:
+  authorizer:
+    handler: src/handlers/Authorizer.handler
+  uploadZuoraUsage:
+    handler: src/handlers/ZuoraHandler.uploadUsageCSV
+    # 0100 every morning
+    events:
+      - schedule: cron(0 1 * * ? *)
+  api:
+    handler: src/handlers/GraphQLHandler.handler
+    events:
+      - schedule:
+          # There is reason to believe Lambdas in a VPC will remain idle for up
+          # to 26 minutes. The author of the Lambda warmer asserts 15 minutes.
+          rate: rate(20 minutes)
+          enable: true
+          input:
+            warmer: true
+            # Keeping 10 warm all day every day costs ~ 18 cents per month.
+            # That's ignoring compute time in the free tier and API Gateway.
+            concurrency: 10
+      - http:
+          authorizer: authorizer
+          path: api
+          method: ANY
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          authorizer: authorizer
+          path: api/{proxy+}
+          method: ANY
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  intake:
+    handler: src/handlers/IntakeHandler.handler
+    events:
+      - schedule:
+          rate: rate(20 minutes)
+          enable: true
+          input:
+            warmer: true
+            concurrency: 10
+      - http:
+          path: intake
+          method: ANY
+          cors:
+            allowCredentials: false
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+      - http:
+          path: intake/{proxy+}
+          method: ANY
+          cors:
+            allowCredentials: false
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+  callStatus:
+    handler: src/handlers/CallStatusHandler.handler
+    events:
+      - http:
+          path: callStatus
+          method: POST
+          cors:
+            allowCredentials: false
+            origins:
+              - "*"
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods

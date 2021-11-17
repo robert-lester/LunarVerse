@@ -1,0 +1,41 @@
+@import '../../styles/variables';
+
+.l-conversation-list-item {
+  padding: $s2;
+  background-color: $lightWhite;
+  border-bottom: 1px solid $white4;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  &.--selected,
+  &:hover {
+    background-color: $lightHover;
+  }
+  .__users {
+    display: flex;
+    align-items: center;
+  }
+  .__margin-left {
+    margin-left: $s1;
+  }
+  .__name-number {
+    display: flex;
+    flex-direction: column;
+    margin-left: $s1;
+  }
+  .__contact-uplink {
+    height: $s2;
+    width: $s2;
+    path {
+      fill: $black;
+    }
+  }
+  .__data {
+    align-items: center;
+    display: flex;
+  }
+  .__margin-left {
+    margin-left: $s1;
+  }
+}

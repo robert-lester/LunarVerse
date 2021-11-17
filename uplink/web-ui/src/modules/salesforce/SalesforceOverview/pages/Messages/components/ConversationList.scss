@@ -1,0 +1,38 @@
+@import '../../../../../../styles/variables';
+
+.sf-conversation-list {
+  width: 320px;
+  border-right: 1px solid $white4;
+  flex-shrink: 0;
+  position: relative;
+  .__actions {
+    background-color: $white4;
+    padding: 0 $s2;
+    height: $s8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .__empty-message {
+    padding: $s2;
+  }
+  .__conversations {
+    overflow-y: scroll;
+    height: calc(100% - 110px);
+    padding-bottom: $s12;
+  }
+  .__refresh {
+    bottom: $s2;
+    display: flex;
+    justify-content: space-around;
+    position: fixed;
+    width: inherit;
+  }
+}
+
+@media (max-width: 900px) {
+  .sf-conversation-list {
+    width: 100vw;
+    border-right: none;
+  }
+}

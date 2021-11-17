@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "protocol": "inspector",
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Staging Offline",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/node_modules/.bin/sls",
+            "args": [
+                "offline",
+                "-s staging",
+                "-P 3000",
+                "--noAuth",
+            ],
+            "env": {
+                "SLS_DEBUG": "*",
+                "NODE_ENV": "staging"
+            },
+            "outFiles": [ 
+                "${workspaceFolder}/build/dist/service/*.js.map",
+                "${workspaceFolder}/build/dist/service/handlers/*.js.map",
+                "${workspaceFolder}/build/dist/service/zuora/*.js.map",
+             ],
+            "sourceMaps": true
+        },
+    ]
+}

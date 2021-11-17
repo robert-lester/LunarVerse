@@ -1,0 +1,52 @@
+{
+  "name": "lunar-cli",
+  "version": "0.1.0",
+  "description": "The Lunar Apps CLI tool",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "check:install": "yarn check --silent > /dev/null 2>&1; if [ $? -ne 0 ]; then yarn install --frozen-lockfile; fi;",
+    "clean": "yarn check:install && ts-node ./src/commands/clean.ts --buildpath=../",
+    "db-shuttle": "ts-node ./src/commands/db-shuttle.ts",
+    "db-uplink": "ts-node ./src/commands/db-uplink.ts",
+    "decrypt": "yarn check:install && ts-node ./src/commands/decrypt.ts --buildpath=../",
+    "deploy": "ts-node ./src/commands/deploy.ts",
+    "encrypt": "ts-node ./src/commands/encrypt.ts",
+    "knex": "yarn check:install && ts-node ./src/commands/knex.ts",
+    "offline": "ts-node ./src/commands/offline.ts",
+    "refresh": "yarn check:install && ts-node ./src/commands/refresh.ts --buildpath=../"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.504.0",
+    "chalk": "^2.4.1",
+    "commander": "^2.15.1",
+    "diff": "^4.0.1",
+    "events": "^3.0.0",
+    "faker": "^4.1.0",
+    "inquirer": "^6.0.0",
+    "knex": "^0.15.0",
+    "minimist": "^1.2.0",
+    "mysql": "^2.15.0",
+    "ora": "^2.1.0",
+    "shelljs": "^0.8.3",
+    "sleep": "^5.2.4",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/chalk": "^2.2.0",
+    "@types/faker": "^4.1.2",
+    "@types/inquirer": "^0.0.41",
+    "@types/js-yaml": "^3.12.0",
+    "@types/knex": "^0.14.15",
+    "@types/minimist": "^1.2.0",
+    "@types/mysql": "^2.15.5",
+    "@types/node": "^9.6.6",
+    "@types/ora": "^1.3.4",
+    "@types/shelljs": "^0.8.1",
+    "@types/yamljs": "^0.2.30",
+    "dotenv": "^6.0.0",
+    "ts-node": "^7.0.0",
+    "tslint": "^5.10.0",
+    "typescript": "^2.8.3"
+  }
+}

@@ -1,0 +1,10 @@
+@import '../../styles/variables';
+
+.l-delete-modal {
+  &__delete-message {
+    padding-bottom: $s3;
+  }
+  &__cancel-button {
+    margin-left: $s1;
+  }
+}

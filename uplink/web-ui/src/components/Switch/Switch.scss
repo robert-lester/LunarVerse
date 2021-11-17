@@ -1,0 +1,42 @@
+@import '../../styles/variables';
+
+.l-switch {
+  display: flex;
+  flex-wrap: wrap;
+  .__input {
+    position: relative;
+    width: max-content;
+    cursor: pointer;
+    &.--checked {
+      .__track {
+        background: $blue;
+      }
+      .__toggle {
+        margin-left: 27px;
+      }
+    }
+    .__toggle {
+      height: $s2;
+      width: $s2;
+      background: $white;
+      border-radius: $s1;
+      position: absolute;
+      top: 4px;
+      transition: margin-left .3s ease-out;
+      margin-left: 4px;
+    }
+    .__track {
+      height: $s3;
+      width: $s6;
+      background: $kindaGrey;
+      border-radius: $s2;
+      transition: background-color .3s ease-out;
+    }
+  }
+  .l-label {
+    margin-left: $s2;
+  }
+  small {
+    flex: 1 0 100%;
+  }
+}

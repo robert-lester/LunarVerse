@@ -1,0 +1,34 @@
+# package directories
+node_modules
+
+# Serverless directories
+*.serverless
+*.webpack
+*.cache-loader
+
+# lockfiles
+package-lock.json
+
+# Environment variables
+config/*/env.yml
+
+# Code Coverage
+coverage
+.nyc_output
+out
+
+# Error logs
+yarn-error.log
+
+#Misc
+*.DS_Store
+
+# lunar pkg binaries
+lunar
+lunar-win.exe
+lunar-macos
+lunar-linux
+
+# Dist
+.dist
+dist

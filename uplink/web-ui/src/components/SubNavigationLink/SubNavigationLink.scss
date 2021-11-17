@@ -1,0 +1,21 @@
+@import '../../styles/variables';
+
+.l-sub-navigation-link {
+  display: block;
+  padding: $s1 $s2;
+  font-weight: 600;
+  border-radius: $s1;
+  transition: background-color .2s ease-in;
+  font-size: $f8;
+  &.--child {
+    margin-left: 19px;
+    font-weight: 300;
+  }
+  &.--disabled {
+    pointer-events: none;
+  }
+  &:hover,
+  &.--active {
+    background-color: $offSlate;
+  }
+}

@@ -1,0 +1,109 @@
+@import '../../styles/variables';
+
+.landing {
+  display: flex;
+  position: fixed;
+  align-items: center;
+  justify-content: center;
+  margin-left: -$s8;
+  width: 100%;
+  height: 100%;
+  .__left-wrap {
+    width: 40%;
+    height: 100%;
+    background-color: $primary;
+  }
+  .__logo {
+    width: 60%;
+    &-wrap {
+      width: 100%;
+      height: 70%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: $white;
+    }
+  }
+  .__contact {
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    min-height: 180px;
+    width: 40%;
+    height: 30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0 $s2;
+    background-color: $slate;
+    &-container {
+      display: flex;
+      justify-content: center;
+      &-group {
+        color: $kindaGrey;
+        font-size: $f6;
+        padding: $s1 $s2;
+      }
+      &-link {
+        font-weight: light;
+        color: $white;
+        text-decoration: underline;
+      }
+    }
+  }
+  .__lunar {
+    width: $f21;
+    padding-right: $s2;
+  }
+  &-form {
+    width: 60%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: scroll;
+    background-color: $bPrimary;
+    .__title {
+      border-bottom: 1px solid $white;
+      padding-bottom: 16px;
+      margin-bottom: $s3;
+      color: $white;
+    }
+    .__fieldset {
+      width: 70%;
+      margin: 0 auto 0 auto;
+    }
+    .__input {
+      margin-bottom: $s2;
+      &-label {
+        color: $offWhite;
+      }
+    }
+    .__change-view-link {
+      color: $offWhite;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .__actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: $s2;
+    }
+    .__data {
+      width: 70%;
+      .l-label {
+        color: $offWhite;
+      }
+    }
+    .__submission-button.l-button {
+      border-color: $white;
+      .__label {
+        color: $white;
+      }
+    }
+  }
+}

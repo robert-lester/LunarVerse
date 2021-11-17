@@ -1,0 +1,162 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+.messages-conversation {
+  width: calc(100vw - 320px);
+  position: relative;
+  &.--hidden {
+    display: none;
+  }
+  &__context {
+    padding: 0 $s2;
+    background-color: $secondary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+  }
+  &__entity {
+    width: 50%;
+    &--left {
+      text-align: right;
+    }
+  }
+  &__conversation {
+    flex-grow: 1;
+    overflow: hidden;
+  }
+  &__initials {
+    &-left {
+      margin-left: $s2;
+      margin-right: 0;
+    }
+  }
+  &__user {
+    @include ROUNDED_DATA_CONTAINER;
+    margin-bottom: 0;
+  }
+  &__align-right {
+    justify-content: flex-end;
+  }
+  &__contact-number {
+    margin-left: $s1;
+    margin-right: 0;
+  }
+  &__owner-number {
+    margin-left: 0;
+    margin-right: $s1;
+  }
+  &__details {
+    display: flex;
+    align-items: center;
+  }
+  &__data {
+    display: flex;
+    align-items: center;
+  }
+  &__phone-number {
+    margin-bottom: $s1;
+    display: block;
+  }
+  &__messages {
+    padding: $s2 $s1;
+    height: 100vh;
+    width: calc(100vw - 684px);
+    overflow-y: scroll;
+    position: relative;
+    overflow-x: hidden;
+    &.--salesforce {
+      height: calc(100vh - 64px);
+    }
+  }
+  &__text-message-bar {
+    position: fixed;
+    background-color: $white4;
+    width: calc(100vw - 684px);
+    bottom: 0;
+    right: 0;
+    padding: 0 16px;
+  }
+  &__text-message-bar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  &__text-message-input {
+    padding: 0 $f12 0 $f7 !important;
+  }
+  &__emojiSelectorIcon {
+    position: absolute;
+    bottom: 20px;
+    right: 60px;
+    &:hover {
+      color: $black;
+    }
+  }
+  &__message-input-container {
+    width: calc(100% - 40px);
+  }
+  &__select-conversation {
+    height: 100vh;
+    width: calc(100vw - 320px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    color: $secondary;
+    padding: 20% $s2 0 $s2;
+    &.--salesforce {
+      height: calc(100vh - 64px);
+    }
+  }
+  &__swap-icon {
+    margin: $s3 $s1 0 $s1;
+  }
+  &__icon {
+    border: 1px solid $secondary;
+    height: $s5;
+    width: $s5;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    margin-left: $s1;
+    &--right {
+      margin-left: 0;
+      margin-right: $s1;
+    }
+  }
+  &__loading {
+    display: flex;
+    flex-grow: 1;
+    height: 100vh;
+    width: calc(100vw - 320px);
+    align-items: center;
+    justify-content: center;
+  }
+  &__refresh {
+    margin-top: -50px;
+    display: flex;
+    justify-content: space-around;
+    position: absolute;
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .messages-conversation {
+    width: 100vw;
+    &__messages {
+      &.--salesforce {
+        height: calc(100vh - 130px);
+      }
+    }
+    &__loading {
+      height: calc(100vh - 64px);
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}

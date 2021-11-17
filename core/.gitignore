@@ -1,0 +1,22 @@
+# package directories
+node_modules
+
+# Serverless directories
+*.serverless
+
+# lockfiles
+package-lock.json
+
+# Environment variables
+env-*.yml
+env.json
+
+# coverage
+.nyc_output
+coverage
+
+# serverless build artifacts
+build/
+
+# serverless deploy script
+lib/slsdeploy

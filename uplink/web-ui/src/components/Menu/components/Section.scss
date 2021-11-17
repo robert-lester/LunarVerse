@@ -1,0 +1,12 @@
+@import '../../../styles/variables';
+
+.l-menu-section {
+  position: relative;
+  margin: 0;
+  padding: $s2 0;
+  border-bottom: 1px solid $darkGrey;
+  color: $white;
+  font-weight: normal;
+  line-height: $s3;
+  word-break: break-all;
+}

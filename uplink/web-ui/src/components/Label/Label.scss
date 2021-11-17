@@ -1,0 +1,10 @@
+@import '../../styles/variables';
+
+.l-label {
+  display: flex;
+  min-height: 24px;
+  align-items: center;
+  font-size: $f7;
+  font-weight: 600;
+  color: $primary;
+}

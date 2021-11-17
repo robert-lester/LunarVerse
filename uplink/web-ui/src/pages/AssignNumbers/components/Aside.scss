@@ -1,0 +1,87 @@
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+.assign-numbers-aside {
+  &__create-user {
+    width: 90%;
+    margin: 0 auto $s2 auto;
+  }
+  &__unassigned-users {
+    margin-top: $s1;
+  }
+  &__li {
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: -4px;
+  }
+  &__percentage-circle {
+    margin: 18px auto 0 auto;
+  }
+  &__usage-number {
+    color: $green;
+  }
+  &__section-title {
+    margin-bottom: 18px;
+    font-weight: bold;
+  }
+  &__error-icon {
+    @include ERROR_ICON;
+  }
+  &__search-container {
+    position: relative;
+    padding: 12px 0px 4px 0px;
+  }
+  &__search-icon {
+    position: absolute;
+    top: 19px;
+    left: 8px;
+  }
+  &__search {
+    padding-left: 24px;
+    width: 100%;
+    line-height: 28px;
+    border-radius: 20px;
+  }
+  &__user {
+    display: flex;
+    align-items: center;
+    height: 54px;
+    cursor: pointer;
+    margin-left: -$s2;
+    margin-right: -$s2;
+    padding-left: $s2;
+    border-bottom: 1px solid $slate;
+    justify-content: space-between;
+    &:hover {
+      .assign-numbers-aside__edit-icon {
+        display: block;
+      }
+      background-color: $lightSlate;
+    }
+    &-name {
+      width: 215px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 600;
+      line-height: $s2;
+      cursor: pointer;
+    }
+    &-data {
+      display: flex;
+      flex-direction: column;
+      color: $white;
+      cursor: pointer;
+    }
+    &-info {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+  }
+  &__edit-icon {
+    display: none;
+    margin-left: -$s3;
+  }
+}

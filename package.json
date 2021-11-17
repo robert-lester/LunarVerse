@@ -1,0 +1,26 @@
+{
+  "name": "lunarverse",
+  "version": "1.0.0",
+  "description": "Become one.",
+  "license": "ISC",
+  "scripts": {
+    "backup:config:env": "find . -path \"*config/*yml\" -exec echo {} \\; | tar -czf ${LUNAR_BACKUP_PATH:-/tmp}/lunarConfigBackup$(date +%s).tgz -T - > /dev/null",
+    "clean": "yarn --cwd ./cli clean",
+    "db:shuttle": "cd cli && yarn db-shuttle",
+    "db:uplink": "cd cli && yarn db-uplink",
+    "decrypt": "yarn backup:config:env && yarn --cwd ./cli decrypt demo production qa staging uplink-prod integration test",
+    "deploy": "cd cli && yarn deploy",
+    "encrypt": "cd cli && yarn encrypt",
+    "knex": "yarn --cwd ./cli knex",
+    "offline": "cd cli && yarn offline",
+    "postinstall": "yarn --cwd ./cli refresh",
+    "refresh": "yarn cache clean && yarn clean && yarn install",
+    "test": "yarn --cwd ./uplink test"
+  },
+  "dependencies": {
+    "koa-helmet": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/koa-helmet": "^3.1.2"
+  }
+}

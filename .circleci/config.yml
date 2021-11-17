@@ -1,0 +1,1142 @@
+anchors:
+  # Anchors are well-formed YAML snippets that can be referenced at any 
+  # location in the document.
+  # httpj://learnxinyminutes.com/docs/yaml/
+  # https://circleci.com/blog/circleci-hacks-reuse-yaml-in-your-circleci-config-with-yaml/
+
+  # Common Configuration Settings
+  ##########################################################################
+  # Each step in a circleci job is typically an instance of shell
+  # Here we explicitly set the bash shell and login option
+  # A login shell in the circleci linux VM sets PATH= ${HOME}/bin:${PATH}
+  - &login_shell /bin/bash --login -eo pipefail
+  # Use this login shell when you want the script to explicitly handle
+  # the exit status code. The addition of the pipefail option indicates
+  # bash will handle the exit code.
+  - &login_shell_no_pipefail /bin/bash --login
+  
+  # Many steps execute relative to the lunar apps path
+  # Code is checked out to this path
+  - &cli_path ~/LunarVerse/cli
+  - &core_path ~/LunarVerse/core
+  - &logger_path ~/LunarVerse/lib/logger
+  - &lunarverse_path ~/LunarVerse
+  - &uplink_api_path ~/LunarVerse/uplink/api
+  - &uplink_web_ui_path ~/LunarVerse/uplink/web-ui
+  - &lunar_workspace_path /tmp/lunar
+  - &import_lunar_workspace_path
+      run: echo 'export LUNAR_WORKSPACE_PATH="/tmp/lunar"' >> $BASH_ENV
+
+  # Any job that requires a virtual machine will use these default settings
+  - &common_virtual_machine_config
+    working_directory: *lunarverse_path
+    shell: *login_shell
+
+  # Ubuntu 16.04.5 LTS xenial with Docker and docker-compose
+  # https://circleci.com/docs/2.0/configuration-reference/#machine
+  # - &virtual_machine_image circleci/classic:201808-01
+  - &virtual_machine_image ubuntu-1604:201903-01
+
+  - &virtual_machine_config_deploy_to_integration
+    <<: *common_virtual_machine_config
+    environment:
+      LUNAR_TESTS_STAGE: test
+      LUNAR_DEPLOY_STAGE: integration
+    machine:
+        image: *virtual_machine_image
+
+  - &virtual_machine_config_deploy_to_staging
+    <<: *common_virtual_machine_config
+    environment:
+      LUNAR_TESTS_STAGE: test
+      LUNAR_DEPLOY_STAGE: staging
+    machine:
+        image: *virtual_machine_image
+
+  - &virtual_machine_config_deploy_to_qa
+    <<: *common_virtual_machine_config
+    environment:
+      LUNAR_TESTS_STAGE: test
+      LUNAR_DEPLOY_STAGE: qa
+    machine:
+        image: *virtual_machine_image
+
+  - &virtual_machine_config_deploy_to_uplink_prod
+    <<: *common_virtual_machine_config
+    environment:
+      LUNAR_TESTS_STAGE: test
+      LUNAR_DEPLOY_STAGE: uplink-prod
+    machine:
+        image: *virtual_machine_image
+
+  # Dependency Installation
+  ##########################################################################
+  - &yarn yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
+  - &install_cli
+    name: Install CLI Dependencies
+    shell: *login_shell
+    working_directory: *cli_path
+    command: *yarn
+  - &install_core
+    name: Install Core Dependencies
+    shell: *login_shell
+    working_directory: *core_path
+    command: *yarn
+  - &install_logger
+    name: Install Logger Dependencies
+    shell: *login_shell
+    working_directory: *logger_path
+    command: *yarn
+  - &install_uplink
+    name: Install Uplink Dependencies
+    shell: *login_shell
+    working_directory: *uplink_api_path
+    command: *yarn
+  - &install_all
+    name: Install Lunar Apps Dependencies
+    shell: *login_shell
+    working_directory: *lunarverse_path
+    command: *yarn
+
+  # Steps
+  # A circleci job is composed of a series of steps
+  ##########################################################################
+  - &get_lunar_tests_config
+      run:
+        name: Get Lunar Tests Config YAML
+        command: ls -lart /tmp/lunar/config/${LUNAR_TESTS_STAGE} && cp /tmp/lunar/config/${LUNAR_TESTS_STAGE}/*.yml ./config/${LUNAR_TESTS_STAGE} && [ -f ./config/${LUNAR_TESTS_STAGE}/env.yml ]
+  - &get_lunar_deployment_config
+      run:
+        name: Get Lunar Deployment Config YAML
+        command: ls -lart /tmp/lunar/config/${LUNAR_DEPLOY_STAGE} && cp /tmp/lunar/config/${LUNAR_DEPLOY_STAGE}/*.yml ./config/${LUNAR_DEPLOY_STAGE} && [ -f ./config/${LUNAR_DEPLOY_STAGE}/env.yml ]
+  - &install_mysql_client
+      run:
+        name: Install mysql-client used by integration tests
+        command: 'sudo apt-get install -y mysql-client'
+  - &install_nvm
+      run:
+        name: Install node version manager
+        command: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+          echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+          echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+  - &install_node_and_yarn
+      run:
+        # Use node version manager to install a more recent version of Node and yarn
+        name: Install node 10.16.1 and yarn 1.17.3
+        command: 'nvm install 10.16.1 && nvm alias default 10.16.1 && npm install -g yarn@1.17.3'
+  - &install_serverless_framework_1_32_0
+      run:
+        name: Install Serverless Framework 1.32.0
+        command: 'yarn global add serverless@1.32.0 --tilde --prefix ${HOME} && echo "SLS_VERSION: $(serverless --version)"'
+  - &install_serverless_framework
+      run:
+        name: Install Serverless Framework ~1.44.1
+        # Install serverless executable to $HOME/bin
+        # Tilde indicates to install most recent minor version
+        command: |
+          yarn global add serverless@1.44.1 --tilde --prefix ${HOME}
+          echo "SLS_VERSION: $(serverless --version)"
+          echo "export SLSPATH=\"$(which serverless)\"" >> $BASH_ENV
+  - &install_lunar_apps_dependencies
+      run:
+        <<: *install_all
+  - &run_uplink_unit_tests
+      run:
+        name: Run Uplink Unit Tests
+        working_directory: *uplink_api_path
+        shell: *login_shell_no_pipefail
+        command: |
+            # The Mocha test runner returns a success status code (i.e. 0)
+            # even if a test fails. The following logic checks the test result
+            # log for failed tests and returns a non-zero status code.
+            yarn run test:unit 2>&1 | tee uplink_unit.test.log
+            testFailed=$(grep -c "error Command failed with exit code" uplink_unit.test.log) 
+            if [ "$testFailed" -ne 0 ]; then
+                (>&2 echo "The test runner failed tests!")
+                exit 1
+            fi
+            exit 0
+  - &run_uplink_lib_unit_tests
+      run:
+        name: Run Uplink Lib Unit Tests
+        working_directory: *uplink_api_path
+        shell: *login_shell_no_pipefail
+        command: |
+            # The Mocha test runner returns a success status code (i.e. 0)
+            # even if a test fails. The following logic checks the test result
+            # log for failed tests and returns a non-zero status code.
+            yarn test:lib 2>&1 | tee uplink_lib_unit.test.log
+            testFailed=$(grep -c "error Command failed with exit code" uplink_lib_unit.test.log) 
+            if [ "$testFailed" -ne 0 ]; then
+                (>&2 echo "The test runner failed tests!")
+                exit 1
+            fi
+            exit 0
+  - &run_serverless_offline_in_background
+      run:
+        # Start 3 servers in the background (so concurrency can be tested).
+        # TODO: Find a way to boot up an arbitrary number of processes and
+        # link them here using Webpack.
+        name: Start Serverless Offline
+        working_directory: *uplink_api_path
+        background: true
+        command: |
+          # TODO: Start the uplink offline test processes from the yarn package scripts
+          ./node_modules/serverless/bin/serverless offline --noAuth --stage=test --port=3001 2>&1 >> ./uplink_integration_sls.log &
+          ./node_modules/serverless/bin/serverless offline --noAuth --stage=test --port=3002 2>&1 >> ./uplink_integration_sls.log &
+          ./node_modules/serverless/bin/serverless offline --noAuth --stage=test --port=3003 2>&1 >> ./uplink_integration_sls.log &
+          # This job intermittently has failed because tail could not find the file. Sleep may solve the problem by giving bash time to open the file descriptor.
+          sleep 1 && tail -f ./uplink_integration_sls.log
+  - &wait_for_serverless_offline_to_start
+      run:
+        name: Waiting for Serverless Offline to Spin Up
+        shell: *login_shell_no_pipefail
+        command: |
+            # Repeatedly check to determine if the server is up.
+            # When the server is up, a request to the default 
+            # endpoint returns a 404.
+            wget --no-verbose --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=10 -t 120 http://localhost:3003/
+            # wget returns an exit status code 8 when the server returns 404
+            if [ $? -eq 8 ]; then
+                i=5
+                printf "wget exited with correct status code! Waiting for ${i} seconds."
+                while [ "$i" -ne 0 ]
+                do
+                    i=$[$i-1] && sleep 1 && printf "."
+                done
+                printf "\n"
+                exit 0
+            fi
+            (>&2 echo "wget exited with incorrect status code=$?") && exit 1
+  - &run_uplink_integration_tests
+      run:
+        name: Run Uplink Integration Tests
+        working_directory: *uplink_api_path
+        shell: *login_shell_no_pipefail
+        command: |
+            # The Mocha test runner returns a success status code (i.e. 0)
+            # even if a test fails. The following logic checks the test result
+            # log for failed tests and returns a non-zero status code.
+            yarn run test:integration 2>&1 | tee uplink_integration.test.log
+            if grep -q "[0-9]* failing" uplink_integration.test.log; then
+                (>&2 echo "The test runner failed tests!")
+                exit 1
+            fi
+            if grep -q "Error:" uplink_integration.test.log; then
+                (>&2 echo "The test runner failed tests!")
+                exit 1
+            fi
+            exit 0
+  - &import_uplink_version
+      run:
+        name: Import the Uplink Version to the Environment
+        shell: *login_shell
+        command: |
+          uplinkVersion=$(grep version ./uplink/package.json | cut -d ':' -f2 | tr -d '," ')
+          if [[ -z "$uplinkVersion" ]]; then
+            (>&2 echo "Failed to get the uplink version from ./uplink/package.json!")
+            exit 1
+          fi
+          (>&2 echo "Uplink Version is ${uplinkVersion}")
+          echo "export UPLINK_VERSION=\"$uplinkVersion\"" >> $BASH_ENV
+  # Steps - Deployment
+  ##########################################################################
+  - &package_uplink_for_deployment
+      run:
+        name: Package Uplink for Deployment
+        working_directory: *uplink_api_path
+        shell: *login_shell
+        command: echo "LUNAR_DEPLOY_STAGE=${LUNAR_DEPLOY_STAGE}"; NODE_ENV=${LUNAR_DEPLOY_STAGE} yarn sls:package
+  - &copy_uplink_package_to_workspace
+      run:
+        name: Copy Uplink Package to Workspace
+        working_directory: *uplink_api_path
+        shell: *login_shell_no_pipefail
+        command: |
+          mkdir -p /tmp/lunar/build/package || (echo "Failed to create workspace directory!" && exit 1)
+          if [ -f ./build/package/cloudformation-template-update-stack.json ]; then
+              cp -fr ./build/package/* /tmp/lunar/build/package
+          else
+              echo "Failed to find a cloudformation build artifact! Lame." && exit 1
+          fi
+  - &copy_uplink_package_to_build
+      run:
+        name: Copy Uplink Package to Build
+        working_directory: *uplink_api_path
+        shell: *login_shell_no_pipefail
+        command: |
+          if [ -f /tmp/lunar/build/package/cloudformation-template-update-stack.json ]; then
+              mkdir -p ./build/package
+              cp -fr /tmp/lunar/build/package/* ./build/package
+          else
+              echo "Failed to find a cloudformation build artifact! Lame." && exit 1
+          fi
+  - &deploy_uplink
+      run:
+        name: Deploy Uplink
+        working_directory: *uplink_api_path
+        command: echo "LUNAR_DEPLOY_STAGE=${LUNAR_DEPLOY_STAGE}"; NODE_ENV=${LUNAR_DEPLOY_STAGE} yarn sls:deploy
+  - &deploy_core
+      run:
+        name: Deploy Core
+        working_directory: *core_path
+        command: echo "LUNAR_DEPLOY_STAGE=${LUNAR_DEPLOY_STAGE}"; NODE_ENV=${LUNAR_DEPLOY_STAGE} yarn deploy
+  # The following LUNAR_DEV and LUNAR_PROD environment variables are declared
+  # in circleci "Build Settings - Environment Variables" dashboard.
+  # We are assuming the circleci infrastructure is secure!
+  - &import_dev_aws_credentials
+      run:
+        name: Import Development AWS Credentials into Environment
+        shell: *login_shell
+        command: |
+          echo 'export AWS_ACCESS_KEY_ID="$LUNAR_DEV_AWS_ACCESS_KEY_ID"' >> $BASH_ENV
+          echo 'export AWS_SECRET_ACCESS_KEY="$LUNAR_DEV_AWS_SECRET_ACCESS_KEY"' >> $BASH_ENV
+          echo 'export AWS_DEFAULT_REGION="$LUNAR_DEV_AWS_REGION"' >> $BASH_ENV
+          echo 'export AWS_CHECK_IP="$(curl --silent https://checkip.amazonaws.com)"' >> $BASH_ENV
+          # This is lame and a work-around to circleci behavior. The BASH_ENV
+          # variable contains the path to a temporary file. The temp file
+          # should be sourced by bashrc.
+          echo 'source $BASH_ENV' >> ~/.bashrc
+  - &import_prod_aws_credentials
+      run:
+        name: Import Production AWS Credentials into Environment
+        shell: *login_shell
+        command: |
+          echo 'export AWS_ACCESS_KEY_ID="$LUNAR_PROD_AWS_ACCESS_KEY_ID"' >> $BASH_ENV
+          echo 'export AWS_SECRET_ACCESS_KEY="$LUNAR_PROD_AWS_SECRET_ACCESS_KEY"' >> $BASH_ENV
+          echo 'export AWS_DEFAULT_REGION="$LUNAR_PROD_AWS_REGION"' >> $BASH_ENV
+          echo 'export AWS_CHECK_IP="$(curl --silent https://checkip.amazonaws.com)"' >> $BASH_ENV
+  - &create_aws_profiles_for_dev_deployment
+      run:
+        name: Create AWS Profiles for Development Deployment
+        shell: *login_shell
+        command: |
+          aws configure set aws_access_key_id $LUNAR_DEV_AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $LUNAR_DEV_AWS_SECRET_ACCESS_KEY
+          aws configure set default.region us-east-1
+          aws configure set default.output json
+  - &create_aws_profiles_for_prod_deployment
+      run:
+        name: Create AWS Profiles for Production Deployment
+        shell: *login_shell
+        command: |
+          aws configure set aws_access_key_id $LUNAR_PROD_AWS_ACCESS_KEY_ID --profile uplink
+          aws configure set aws_secret_access_key $LUNAR_PROD_AWS_SECRET_ACCESS_KEY --profile uplink
+          aws configure set default.region us-east-1 --profile uplink
+          aws configure set default.output json --profile uplink
+  # Pokes a hole in the jumpbox AWS security group for this instance of a virtual machine
+  - &authorize_access_from_circleci_to_jumpbox
+      run:
+        name: Authorize access from circleci to jumpbox
+        shell: *login_shell
+        command: echo "JB_PUB_IP=$JUMPBOX_PROD_IP, SG_ID=$JUMPBOX_PROD_SG_ID, MY_IP=$AWS_CHECK_IP"; aws ec2 authorize-security-group-ingress --group-id $JUMPBOX_PROD_SG_ID --protocol tcp --port 22 --cidr $AWS_CHECK_IP/32
+  # Revokes access in the jumpbox AWS security group for this instance of a virtual machine
+  - &revoke_access_from_circleci_to_jumpbox
+      run:
+        name: Revoke access from circleci to jumpbox
+        shell: *login_shell
+        command: echo "JB_PUB_IP=$JUMPBOX_PROD_IP, SG_ID=$JUMPBOX_PROD_SG_ID, MY_IP=$AWS_CHECK_IP"; aws ec2 revoke-security-group-ingress --group-id $JUMPBOX_PROD_SG_ID --protocol tcp --port 22 --cidr $AWS_CHECK_IP/32
+        # This command will run regardless if other steps have failed
+        when: always
+  # When an SSH key is added to the circleci environment via the circleci
+  # dashboard, the key can be added to a VM using the fingerprints key.
+  # https://circleci.com/docs/2.0/add-ssh-key/
+  #
+  # circleci adds the key to ssh agent based on host known/IP address
+  # The following key allows a circleci job to push to the repository
+  - &circleci_github_push_key
+      fingerprints:
+        - "98:9b:b2:21:dd:e1:33:8c:b7:47:d6:c0:fc:eb:e8:d7"
+  # The following key allows a circleci job to access the production jumpbox
+  - &circleci_prod_jumpbox_key
+      fingerprints:
+        - "62:a2:62:a8:b3:1e:ed:31:c1:b8:3b:c2:e5:6d:fa:a2"
+  # Uses AWS CLI and AWS credentials to get the public facing IP address of
+  # the RDS jumpbox. The IP address is exported to the bash environment.
+  - &get_jumpbox_public_ip
+      run:
+        name: Get the jumpbox public IP address
+        shell: *login_shell_no_pipefail
+        command: export JUMPBOX_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${JUMPBOX_EC2_NAME}" --output text --query 'Reservations[*].Instances[*].PublicIpAddress') && (echo "export JUMPBOX_PUBLIC_IP=$JUMPBOX_PUBLIC_IP" >> $BASH_ENV) || (echo "Failed to get the jumpbox public IP address!" && exit 1)
+  # If the public facing IP address of the RDS jumpbox changes, this
+  # step should fail. Update the ssh key host and key in the circleic
+  # dashboard.
+  - &validate_jumpbox_host
+      run:
+        name: Validate Jumpbox Host
+        shell: *login_shell_no_pipefail
+        command: '[ -z "$JUMPBOX_PUBLIC_IP" ] && (echo "The JUMPBOX_PUBLIC_IP is not set!" && exit 1) || (ssh-keyscan $JUMPBOX_PUBLIC_IP >> ~/.ssh/known_hosts && echo "JUMPBOX_PUBLIC_IP=$JUMPBOX_PUBLIC_IP")'
+  - &verify_connection_to_jumpbox
+      run:
+        name: Verify Connection to Jumpbox
+        shell: *login_shell_no_pipefail
+        # Verifies connection
+        command: echo "JB_USERNAME=${JUMPBOX_SSH_USERNAME}, IP=${JUMPBOX_PROD_IP}"; ssh -q -o "BatchMode=yes" -o "ConnectTimeout=5" $JUMPBOX_SSH_USERNAME@$JUMPBOX_PROD_IP "echo 2>&1" && echo $host SSH_OK || (echo $host SSH_NOK; exit 1)
+  - &setup_ssh_mysql_tunnel
+      run:
+        name: Set up an SSH tunnel that forwards RDS through the jumpbox
+        command: echo "JB_USERNAME=${JUMPBOX_SSH_USERNAME}, IP=${JUMPBOX_PROD_IP}"; ssh -fN -o ExitOnForwardFailure=yes -o ServerAliveInterval=1 -o ServerAliveCountMax=2 -L 3306:${LUNAR_PROD_AWS_RDS_HOSTNAME}:3306 ${JUMPBOX_SSH_USERNAME}@${JUMPBOX_PROD_IP} && (lsof -i:3306 || (echo "Failed to establish a tunnel through the jumpbox to RDS!" && exit 1)) && ps aux | grep "[s]sh.*3306"
+        background: true
+  - &verify_connection_to_rds
+      run:
+        name: Verify Connection to RDS
+        command: |
+          for run in {1..3}
+          do
+            netcat -z -v localhost 3306 && exit 0
+            sleep 1
+          done
+          echo "Failed to establish a connection to RDS after several retries!" && exit 1
+  - &add_rds_hostname_to_hosts_file
+      run:
+        name: Add the RDS hostname to the hosts file i.e. map remote RDS to localhost
+        command: sudo bash -c "echo \"127.0.0.1	${LUNAR_PROD_AWS_RDS_HOSTNAME}\" >> /etc/hosts" || (echo "Failed to add RDS hosts ${LUNAR_PROD_AWS_RDS_HOSTNAME} to the hosts file!" && exit 1)
+
+  # Steps - Database Migrations
+  ##########################################################################
+  - &get_lunar_rds_sgid_uplink_dev
+      run:
+        name: Get Lunar RDS uplink-dev Security Group ID
+        shell: *login_shell_no_pipefail
+        command: export LUNAR_RDS_SGID=$(aws rds describe-db-instances --filters Name=db-instance-id,Values=uplink-dev --query 'DBInstances[*].VpcSecurityGroups[*].VpcSecurityGroupId' --output text) && (echo "export LUNAR_RDS_SGID=$LUNAR_RDS_SGID" >> $BASH_ENV) || (echo "Failed to get the Lunar RDS SGID!" && exit 1)
+  - &get_lunar_rds_sgid_uplink_qa
+      run:
+        name: Get Lunar RDS uplink-qa Security Group ID
+        shell: *login_shell_no_pipefail
+        command: export LUNAR_RDS_SGID=$(aws rds describe-db-instances --filters Name=db-instance-id,Values=uplink-qa --query 'DBInstances[*].VpcSecurityGroups[*].VpcSecurityGroupId' --output text) && (echo "export LUNAR_RDS_SGID=$LUNAR_RDS_SGID" >> $BASH_ENV) || (echo "Failed to get the Lunar RDS SGID!" && exit 1)
+  - &get_lunar_rds_sgid_uplink_prod
+      run:
+        name: Get Lunar RDS uplink-prod Security Group ID
+        shell: *login_shell_no_pipefail
+        command: export LUNAR_RDS_SGID=$(aws rds describe-db-instances --filters Name=db-instance-id,Values=uplink-prod --query 'DBInstances[*].VpcSecurityGroups[*].VpcSecurityGroupId' --output text) && (echo "export LUNAR_RDS_SGID=$LUNAR_RDS_SGID" >> $BASH_ENV) || (echo "Failed to get the Lunar RDS SGID!" && exit 1)
+  - &authorize_access_from_circleci_to_rds
+      run:
+        name: Authorize access from circleci to RDS
+        shell: *login_shell
+        command: echo "SG_ID=$LUNAR_RDS_SGID, MY_IP=$AWS_CHECK_IP"; aws ec2 authorize-security-group-ingress --group-id $LUNAR_RDS_SGID --protocol tcp --port 3306 --cidr $AWS_CHECK_IP/32
+  - &revoke_access_from_circleci_to_rds
+      run:
+        name: Revoke access from circleci to RDS
+        shell: *login_shell
+        command: echo "SG_ID=$LUNAR_RDS_SGID, MY_IP=$AWS_CHECK_IP"; aws ec2 revoke-security-group-ingress --group-id $LUNAR_RDS_SGID --protocol tcp --port 3306 --cidr $AWS_CHECK_IP/32
+        when: always
+  - &run_uplink_knex_latest_migrations
+      run:
+        name: Run Uplink knex CLI latest migrations
+        command: yarn knex --verbose --keep --stage=${LUNAR_DEPLOY_STAGE} wrap migrate:latest
+  - &check_integration_database_has_latest_migrations
+      run:
+        name: Check Integration Database Has Latest Migrations
+        shell: *login_shell_no_pipefail
+        command: |
+            # Check the integration database has the latest migrations
+            # This will cause the tests to fail if the migrations haven't 
+            # been applied to the database. Uses the knex CLI wrapper.
+            # Waits for docker-compose up to finish loading the database.
+            echo "Waiting 30 seconds for the integration database to load:"
+            for i in {0..30}; do printf "."; sleep 1; done; echo 
+            yarn knex --verbose --keep --disablessl --stage=test wrap migrate:latest 2>&1 | tee uplink_migration.log
+            isCurrent=$(grep -c "Already up to date" uplink_migration.log) 
+            if [ "$isCurrent" -eq 0 ]; then
+                (>&2 echo "The integration test database needs to be updated with the latest migrations!")
+                exit 1
+            fi
+            (>&2 echo "The integration test database is current!")
+            exit 0
+  - &load_integration_database
+      run:
+        name: Load Integration Database
+        working_directory: *uplink_api_path
+        shell: *login_shell_no_pipefail
+        command: docker-compose up
+        background: true
+  - &terminate_integration_database
+      run:
+        name: Terminate Integration Database
+        working_directory: *uplink_api_path
+        shell: *login_shell_no_pipefail
+        command: docker-compose down --volumes
+        when: always
+
+  # Artifact Paths
+  ##########################################################################
+  # The result of both the unit and integration tests are stored as circleci
+  # artifacts and made available in the circleci dashboard
+  - &artifact_path_uplink_unit_test
+        path: uplink/api/uplink_unit.test.log
+  - &artifact_path_uplink_integration_test
+        path: uplink/api/uplink_integration.test.log
+  - &artifact_path_uplink_integration_sls
+        path: uplink/api/uplink_integration_sls.log
+
+version: 2.1
+executors:
+  lunar_executor:
+    docker:
+      - image: circleci/node:8.12.0-stretch
+
+jobs:
+  decrypt_configs:
+    executor: lunar_executor
+    working_directory: *lunarverse_path
+    steps:
+      - checkout:
+          path: *lunarverse_path
+      - *import_dev_aws_credentials
+      - run:
+          name: Make Lunar Config Workspace
+          command: 'mkdir -p /tmp/lunar/config/test'
+      - run: *install_cli
+      - run:
+          name: Decrypt Configs
+          command: 'env; [ -n "${AWS_ACCESS_KEY_ID}" ] && yarn run decrypt && cp -fr ./config/* /tmp/lunar/config'
+      # Create a location to store job artifacts
+      # Job artifacts are persisted between jobs
+      - persist_to_workspace:
+          root: /tmp/lunar
+          paths: config/*
+
+  # Provision a Linux VM with Lunar dependencies
+  tunnel_to_rds_and_run_migrations:
+    # Uses YAML << Merge Key Language-Independent Type
+    # Insert all the keys from a given anchor into the current map
+    # In this case, get the common executor settings and environment variables
+    <<: *virtual_machine_config_deploy_to_uplink_prod
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - add_ssh_keys: *circleci_prod_jumpbox_key
+      - *get_lunar_tests_config
+      - *get_lunar_deployment_config
+      - *import_prod_aws_credentials
+      - *create_aws_profiles_for_dev_deployment
+      - *create_aws_profiles_for_prod_deployment
+      - *install_node_and_yarn
+      # Only really need the uplink knex dependency -- lame
+      # TODO: revisit migration workflow to make this more efficient
+      - *install_lunar_apps_dependencies
+      - *authorize_access_from_circleci_to_jumpbox
+      - *verify_connection_to_jumpbox
+      - *setup_ssh_mysql_tunnel
+      - *verify_connection_to_rds
+      - *add_rds_hostname_to_hosts_file
+      - *run_uplink_knex_latest_migrations
+      - *revoke_access_from_circleci_to_jumpbox
+
+  # Uplink jobs provision a Linux VM with uplink dependencies.
+  # One application server (i.e. serverless offline) is started. Mocha test
+  # runner uses docker-compose to spin up a database.
+  #
+  # Ideally, we would use the docker executor. However, orchestrating the
+  # circleci remote docker execution environment is a pain in the ass.
+  # TODO: orchestrate docker containers to properly handle docker-compose
+  run_all_uplink_tests:
+    # Uses YAML << Merge Key Language-Independent Type
+    # Insert all the keys from a given anchor into the current map
+    # In this case, get the common executor settings and environment variables
+    <<: *virtual_machine_config_deploy_to_staging
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_tests_config
+      # Uplink code depends on aws-lambda -sdk that requires AWS credentials
+      # Therefore, get default aws credentials even though this job does not
+      # deploy to an AWS environment
+      - *import_dev_aws_credentials
+      - *create_aws_profiles_for_dev_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      # Caching of only one VM build's packages is of marginal utility.
+      # The average installation time with caching and without is similar.
+      # Furthermore, the cache key is based on the root lunar app package.json.
+      # The cache will be invalidated when a package is added to uplink.
+      # - restore_cache: *restore-yarn-cache
+      - *install_lunar_apps_dependencies
+      - *load_integration_database
+      - *check_integration_database_has_latest_migrations
+      - *terminate_integration_database
+      # - save_cache: *save-yarn-cache
+      - *run_uplink_unit_tests
+      - store_artifacts: *artifact_path_uplink_unit_test
+      # - *install_mysql_client
+      - *run_serverless_offline_in_background
+      - *wait_for_serverless_offline_to_start
+      - *run_uplink_integration_tests
+      - store_artifacts: *artifact_path_uplink_integration_test
+      - store_artifacts: *artifact_path_uplink_integration_sls
+
+  core_deploy_to_integration:
+    <<: *virtual_machine_config_deploy_to_integration
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_deployment_config
+      - *import_dev_aws_credentials
+      - *create_aws_profiles_for_dev_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      - *install_lunar_apps_dependencies
+      - *deploy_core
+
+  core_deploy_to_staging:
+    <<: *virtual_machine_config_deploy_to_staging
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_deployment_config
+      - *import_dev_aws_credentials
+      - *create_aws_profiles_for_dev_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      - *install_lunar_apps_dependencies
+      - *deploy_core
+
+  core_deploy_to_qa:
+    <<: *virtual_machine_config_deploy_to_qa
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_deployment_config
+      - *import_dev_aws_credentials
+      - *create_aws_profiles_for_dev_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      - *install_lunar_apps_dependencies
+      - *deploy_core
+
+  core_deploy_to_uplink_prod:
+    <<: *virtual_machine_config_deploy_to_uplink_prod
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_tests_config
+      - *get_lunar_deployment_config
+      - *import_prod_aws_credentials
+      - *create_aws_profiles_for_prod_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      - *install_lunar_apps_dependencies
+      - *deploy_core
+
+  uplink_deploy_to_staging:
+    <<: *virtual_machine_config_deploy_to_staging
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_deployment_config
+      - *import_dev_aws_credentials
+      - *create_aws_profiles_for_dev_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      - *install_lunar_apps_dependencies
+      - *get_lunar_rds_sgid_uplink_dev
+      - *authorize_access_from_circleci_to_rds
+      - *run_uplink_knex_latest_migrations
+      - *revoke_access_from_circleci_to_rds
+      - *package_uplink_for_deployment
+      - *deploy_uplink
+
+  uplink_deploy_to_integration:
+    <<: *virtual_machine_config_deploy_to_integration
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_deployment_config
+      - *import_dev_aws_credentials
+      - *create_aws_profiles_for_dev_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      - *install_lunar_apps_dependencies
+      - *get_lunar_rds_sgid_uplink_dev
+      - *authorize_access_from_circleci_to_rds
+      - *run_uplink_knex_latest_migrations
+      - *revoke_access_from_circleci_to_rds
+      - *package_uplink_for_deployment
+      - *deploy_uplink
+
+  uplink_test_and_deploy_to_qa:
+    <<: *virtual_machine_config_deploy_to_qa
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_tests_config
+      - *get_lunar_deployment_config
+      - *import_dev_aws_credentials
+      - *create_aws_profiles_for_dev_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      # - restore_cache: *restore-yarn-cache
+      - *install_lunar_apps_dependencies
+      # - save_cache: *save-yarn-cache
+      - *run_uplink_unit_tests
+      - store_artifacts: *artifact_path_uplink_unit_test
+      # - *install_mysql_client
+      - *run_serverless_offline_in_background
+      - *wait_for_serverless_offline_to_start
+      - *run_uplink_integration_tests
+      - store_artifacts: *artifact_path_uplink_integration_test
+      - store_artifacts: *artifact_path_uplink_integration_sls
+      - *get_lunar_rds_sgid_uplink_qa
+      - *authorize_access_from_circleci_to_rds
+      - *run_uplink_knex_latest_migrations
+      - *revoke_access_from_circleci_to_rds
+      - *package_uplink_for_deployment
+      - *deploy_uplink
+
+  uplink_test_and_deploy_to_uplink_prod:
+    <<: *virtual_machine_config_deploy_to_uplink_prod
+    steps:
+      - attach_workspace:
+          at: /tmp/lunar
+      - checkout:
+          path: *lunarverse_path
+      - *get_lunar_tests_config
+      - *get_lunar_deployment_config
+      - *import_prod_aws_credentials
+      - *create_aws_profiles_for_prod_deployment
+      - *install_node_and_yarn
+      - *install_serverless_framework
+      - *install_lunar_apps_dependencies
+      - *run_uplink_unit_tests
+      - store_artifacts: *artifact_path_uplink_unit_test
+      # - *install_mysql_client
+      - *run_serverless_offline_in_background
+      - *wait_for_serverless_offline_to_start
+      - *run_uplink_integration_tests
+      - store_artifacts: *artifact_path_uplink_integration_test
+      - store_artifacts: *artifact_path_uplink_integration_sls
+      - *package_uplink_for_deployment
+      - *deploy_uplink
+
+  uplink_publish_github_release:
+    docker:
+      - image: circleci/golang:1.12.4
+    working_directory: *lunarverse_path
+    steps:
+      - attach_workspace:
+          at: *lunar_workspace_path
+      - checkout:
+          path: *lunarverse_path
+      - *import_lunar_workspace_path
+      - *import_uplink_version
+      - run:
+          name: Publish Uplink Release on GitHub
+          command: |
+            if [[ ${IS_GITHUB_RELEASE_PUBLISH_ENABLED} && ${IS_GITHUB_RELEASE_PUBLISH_ENABLED} == 0 ]]; then
+              (>&2 echo "Publish Uplink Release on Github is not enabled!")
+              exit 0
+            fi
+            go get github.com/tcnksm/ghr
+            git archive --prefix=LunarVerse-${UPLINK_VERSION}/ -o ${LUNAR_WORKSPACE_PATH}/uplink-${UPLINK_VERSION}.tar.gz ${UPLINK_VERSION}
+            git archive --prefix=LunarVerse-${UPLINK_VERSION}/ -o ${LUNAR_WORKSPACE_PATH}/uplink-${UPLINK_VERSION}.zip ${UPLINK_VERSION}
+            ls -lart ${LUNAR_WORKSPACE_PATH}
+            (>&2 echo "ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n \"Uplink - Release ${UPLINK_VERSION}\" -delete -replace ${UPLINK_VERSION} ${LUNAR_WORKSPACE_PATH}") 
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "Uplink - Release ${UPLINK_VERSION}" -delete -replace ${UPLINK_VERSION} ${LUNAR_WORKSPACE_PATH}
+
+  uplink_create_and_push_version_tag:
+    executor: lunar_executor
+    working_directory: *lunarverse_path
+    steps:
+      - checkout:
+          path: *lunarverse_path
+      - add_ssh_keys: *circleci_github_push_key
+      - *import_uplink_version
+      - run:
+          name: Create and Push Uplink Release Tag
+          command: |
+            if [[ ${IS_GIT_TAGGING_ENABLED} && ${IS_GIT_TAGGING_ENABLED} == 0 ]]; then
+              (>&2 echo "Create and Push Uplink Release Tag is not enabled!")
+              exit 0
+            fi
+            git config credential.helper 'cache --timeout=120'
+            git config user.email 'mhobbs@belunar.com'
+            git config user.name 'CircleCI'
+            tagName=${UPLINK_VERSION}
+            git ls-remote --exit-code origin refs/tags/${tagName}
+            if [ $? ==  0 ]; then
+              (>&2 echo "${tagName} is already a tag on the repo, silly goose!")
+              exit 1
+            fi
+            git tag -a ${tagName} -m "[skip ci]"
+            git tag
+            (>&2 echo "CircleCI Branch ${CIRCLE_BRANCH}, CircleCI SHA1 ${CIRCLE_SHA1}")
+            if [ "$CIRCLE_BRANCH" == "master" ]; then
+              git push origin ${uplinkVersion}
+            fi
+            exit 0
+
+  # Runs all Uplink web UI tests          
+  uplink_test_web_ui:
+    executor: lunar_executor
+    working_directory: *uplink_web_ui_path
+    steps:
+      - checkout:
+          path: *lunarverse_path
+      - restore_cache:
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+      - *install_nvm
+      - *install_node_and_yarn
+      - run:
+          name: Install Dependencies
+          command: node --version; yarn --version; yarn install --frozen-lockfile
+      - save_cache:
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - /home/circleci/.npm
+      - run:
+          name: Set Environment Variable for REACT_APP_*
+          command: |
+            echo 'export REACT_APP_API_URL="$REACT_APP_API_URL_STAGING"' >> $BASH_ENV
+            echo 'export REACT_APP_CORE_URL="$REACT_APP_CORE_URL_STAGING"' >> $BASH_ENV
+      - run:
+          name: Run Tests
+          command: CI=true yarn test --runInBand
+
+  # Builds and deploys Uplink web UI to staging environment
+  uplink_deploy_web_ui_to_staging:
+    executor: lunar_executor
+    working_directory: *uplink_web_ui_path
+    steps:
+      - checkout:
+          path: *lunarverse_path
+      - *install_nvm
+      - *install_node_and_yarn
+      - run:
+          name: Install Dependencies
+          command: node --version; yarn --version; yarn install --frozen-lockfile
+      - run:
+          name: Install Python
+          command: sudo apt-get update; sudo apt-get install -y python-dev
+      - run:
+          name: Install PIP
+          command: sudo curl -O https://bootstrap.pypa.io/get-pip.py; sudo python get-pip.py
+      - run:
+          name: Install AWS CLI
+          command: sudo pip install awscli --upgrade; aws --version;
+      - *create_aws_profiles_for_dev_deployment
+      - run:
+          name: Set Environment Variable for REACT_APP_*
+          command: |
+            echo 'export REACT_APP_API_URL="$REACT_APP_API_URL_STAGING"' >> $BASH_ENV
+            echo 'export REACT_APP_CORE_URL="$REACT_APP_CORE_URL_STAGING"' >> $BASH_ENV
+      - run:
+          name: Deploy Uplink Web UI to Staging
+          command: yarn build && yarn run deploy staging
+
+  # The following deployment steps depend on environment variables
+  # having been set in the circleci environment settings dashboard:
+  # S3_BUCKET_INTEGRATION, S3_CLOUDFRONTID_INTEGRATION, 
+  # REACT_APP_API_URL_INTEGRATION, and REACT_APP_CORE_URL_INTEGRATION
+  uplink_deploy_web_ui_to_integration:
+    executor: lunar_executor
+    working_directory: *uplink_web_ui_path
+    steps:
+      - checkout:
+          path: *lunarverse_path
+      - *install_nvm
+      - *install_node_and_yarn
+      - run:
+          name: Install Dependencies
+          command: node --version; yarn --version; yarn install --frozen-lockfile
+      - run:
+          name: Install Python
+          command: sudo apt-get update; sudo apt-get install -y python-dev
+      - run:
+          name: Install PIP
+          command: sudo curl -O https://bootstrap.pypa.io/get-pip.py; sudo python get-pip.py
+      - run:
+          name: Install AWS CLI
+          command: sudo pip install awscli --upgrade; aws --version;
+      - *create_aws_profiles_for_dev_deployment
+      - run:
+          name: Set Environment Variable for REACT_APP_*
+          command: |
+            echo 'export REACT_APP_API_URL="$REACT_APP_API_URL_INTEGRATION"' >> $BASH_ENV
+            echo 'export REACT_APP_CORE_URL="$REACT_APP_CORE_URL_INTEGRATION"' >> $BASH_ENV
+      - run:
+          name: Deploy Uplink Web UI to Integration
+          command: yarn build && yarn run deploy integration
+
+  # Builds and deploys Uplink web UI to qa environment
+  uplink_deploy_web_ui_to_qa:
+    executor: lunar_executor
+    working_directory: *uplink_web_ui_path
+    steps:
+      - checkout:
+          path: *lunarverse_path
+      - *install_nvm
+      - *install_node_and_yarn
+      - run:
+          name: Install Dependencies
+          command: node --version; yarn --version; yarn install --frozen-lockfile
+      - run:
+          name: Install Python
+          command: sudo apt-get update; sudo apt-get install -y python-dev
+      - run:
+          name: Install PIP
+          command: sudo curl -O https://bootstrap.pypa.io/get-pip.py; sudo python get-pip.py
+      - run:
+          name: Install AWS CLI
+          command: sudo pip install awscli --upgrade; aws --version;
+      - *create_aws_profiles_for_dev_deployment
+      - run:
+          name: Set Environment Variable for REACT_APP_*
+          command: |
+            echo 'export REACT_APP_API_URL="$REACT_APP_API_URL_QA"' >> $BASH_ENV
+            echo 'export REACT_APP_CORE_URL="$REACT_APP_CORE_URL_QA"' >> $BASH_ENV
+      - run:
+          name: Deploy Uplink Web UI to QA
+          command: yarn build && yarn run deploy qa
+
+# Caching of dependencies does not appear to work between the
+# node docker executor and machine executor. I suspect there
+# are architecture or binary dependencies on the platform.
+#
+# If more jobs requiring the docker executor are added, uncomment 
+# the following section and a restore_cache reference to the build
+# steps. This definitely improves the build time on a single platform.
+#
+# TODO: Add dependency caching as more jobs are added
+#   cache_dependencies:
+#     executor: lunar_executor
+#     working_directory: ~/LunarVerse
+#     steps:
+#       - checkout:
+#           path: ~/LunarVerse
+#       - restore_cache: *restore-yarn-cache
+#       - run: *install_core
+#       - run: *install_logger 
+#       - run: *install_cli
+#       - run: *install_uplink 
+#       - save_cache: *save-yarn-cache
+
+workflows:
+  version: 2.1
+  deploy_to_staging:
+    jobs:
+      - uplink_test_web_ui:
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-staging-deployment$/
+                - staging
+      - uplink_deploy_web_ui_to_staging:
+          # Deployment requires the application configurations
+          requires:
+            - uplink_test_web_ui
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-staging-deployment$/
+                - staging
+      - decrypt_configs:
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-staging-deployment$/
+                - staging
+      - uplink_deploy_to_staging:
+          # Deployment requires the application configurations
+          requires:
+            - decrypt_configs
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-staging-deployment$/
+                - staging
+      - core_deploy_to_staging:
+          # Deployment requires the application configurations
+          requires:
+            - decrypt_configs
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-staging-deployment$/
+                - staging
+
+  deploy_to_integration:
+    jobs:
+      - uplink_deploy_web_ui_to_integration:
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - integration
+      - decrypt_configs:
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - integration
+      - uplink_deploy_to_integration:
+          # Deployment requires the application configurations
+          requires:
+            - decrypt_configs
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - integration
+      - core_deploy_to_integration:
+          # Deployment requires the application configurations
+          requires:
+            - decrypt_configs
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - integration
+
+  run_tests_on_feature_branches:
+    jobs:
+      - decrypt_configs:
+          filters:
+            # Merges will kick off this job
+            # Except for merges to the following branches:
+            branches:
+              ignore:
+                - /^uplink-test-staging-deployment$/
+                - /^uplink-test-qa-deployment$/
+                - /u-wui-.*/
+                - integration
+                - staging
+                - qa
+                - master
+      - run_all_uplink_tests:
+          # Tests require the application configurations
+          requires:
+            - decrypt_configs
+          # Merges will kick off this job
+          # Except for merges to the following branches:
+          filters:
+            branches:
+              ignore:
+                - /^uplink-test-staging-deployment$/
+                - /^uplink-test-qa-deployment$/
+                - /u-wui-.*/
+                - integration
+                - staging
+                - qa
+                - master
+
+  test_and_deploy_to_qa:
+    jobs:
+      - uplink_test_web_ui:
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-qa-deployment$/
+                - qa
+      - uplink_deploy_web_ui_to_qa:
+          # Deployment requires the application configurations
+          requires:
+            - uplink_test_web_ui
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-qa-deployment$/
+                - qa
+      - decrypt_configs:
+          filters:
+            branches:
+              only:
+                - /^uplink-test-qa-deployment$/
+                - qa
+      - uplink_test_and_deploy_to_qa:
+          requires:
+            - decrypt_configs
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-qa-deployment$/
+                - qa
+      - core_deploy_to_qa:
+          requires:
+            - decrypt_configs
+          # Only a merge to the following branches will kick off this job
+          filters:
+            branches:
+              only:
+                - /^uplink-test-qa-deployment$/
+                - qa
+
+  # This workflow deploys uplink to the production environment when a merge to 
+  # master occurs. This workflow tags the release based on the uplink version. 
+  # Finally, the release is published to GitHub Releases.
+  test_and_deploy_to_uplink_prod:
+    jobs:
+      - decrypt_configs:
+          filters:
+            branches:
+              only:
+                - master
+      - tunnel_to_rds_and_run_migrations:
+          requires:
+            - decrypt_configs
+          filters:
+            branches:
+              only:
+                - master
+      - core_deploy_to_uplink_prod:
+          requires:
+            - tunnel_to_rds_and_run_migrations
+          filters:
+            branches:
+              only:
+                - master
+      - uplink_test_and_deploy_to_uplink_prod:
+          requires:
+            - tunnel_to_rds_and_run_migrations
+          filters:
+            branches:
+              only:
+                - master
+      - uplink_create_and_push_version_tag:
+          requires:
+            - uplink_test_and_deploy_to_uplink_prod
+          filters:
+            branches:
+              only:
+                - master
+      - uplink_publish_github_release:
+          requires:
+            - uplink_create_and_push_version_tag
+          filters:
+            branches:
+              only:
+                - master
+
+  test_uplink_web_ui:
+    jobs:
+      - uplink_test_web_ui:
+          filters:
+            branches:
+              only:
+                - /^u-wui-.*$/

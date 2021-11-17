@@ -1,0 +1,36 @@
+@import '../../styles/variables';
+
+div.l-notifications {
+  &__notification {
+    display: flex;
+    margin-bottom: $s2;
+    &--error {
+      background-color: $error;
+    }
+    &--success {
+      background-color: $success;
+    }
+    &--warning {
+      background-color: $warning;
+    }
+    &--information {
+      background-color: $information;
+    }
+  }
+}
+
+i.l-notifications {
+  &__icon-type {
+    opacity: 0.9;
+    margin-right: $s1;
+  }
+  &__message {
+    color: $white;
+  }
+  &__icon {
+    margin: auto;
+    margin-right: 0;
+    font-size: 24px;
+    color: white;
+  }
+}

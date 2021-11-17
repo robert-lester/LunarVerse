@@ -1,0 +1,45 @@
+@mixin ROUNDED_DATA_CONTAINER {
+    align-items: center;
+    border-radius: 32px;
+    border: 2px solid $outline;
+    color: $primary;
+    cursor: pointer;
+    display: flex;
+    font-weight: lighter;
+    height: $s6;
+    position: relative;
+    padding: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+@mixin CIRCLE_CONTAINER {
+    align-items: center;
+    border-radius: 100%;
+    display: flex;
+    height: $f14;
+    justify-content: space-around;
+    margin-right: 12px;
+    width: $f14;
+  }
+
+@mixin CIRCLE_CONTAINER_SMALL {
+    align-items: center;
+    border-radius: 100%;
+    display: flex;
+    height: $s3;
+    justify-content: space-around;
+    margin-right: $s1;
+    width: $s3;
+  }
+  
+@mixin ERROR_ICON {
+    height: 30px;
+    width: 30px;
+    border: 2px solid $white;
+    border-radius: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: $error;
+  }

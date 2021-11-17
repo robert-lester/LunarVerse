@@ -1,0 +1,9 @@
+@import '../../styles/variables';
+
+.l-datepicker {
+  display: flex;
+  align-items: center;
+  &__icon {
+    margin-right: $s2;
+  }
+}

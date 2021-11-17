@@ -1,0 +1,20 @@
+@import '../../styles/variables';
+
+.l-search {
+  position: relative;
+  padding: $s1 0px;
+  .__icon {
+    position: absolute;
+    top: $s2;
+    left: $s1;
+    cursor: auto;
+    line-height: normal;
+    z-index: 1;
+  }
+  .l-input .__element {
+    padding-left: $s3;
+    width: 100%;
+    line-height: 28px;
+    border-radius: 20px;
+  }
+}

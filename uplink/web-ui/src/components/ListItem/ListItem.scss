@@ -1,0 +1,13 @@
+@import '../../styles/variables';
+
+.l-list-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: $primary;
+  font-weight: normal;
+  &:hover {
+    background: $kindaWhite;
+  }
+}

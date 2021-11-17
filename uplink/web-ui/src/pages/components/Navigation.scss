@@ -1,0 +1,69 @@
+@import '../../styles/variables';
+
+.navigation {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: $s8;
+  height: 100vh;
+  background-color: $offSlate;
+  .__brand {
+    height: $s8;
+    padding: 12px 0;
+    display: flex;
+    box-sizing: border-box;
+    background-color: $bPrimary;
+    transition: border 400ms ease-out;
+    align-items: center;
+    justify-content: center;
+    color: $kindaWhite;
+    flex-wrap: wrap;
+    font-size: $s1;
+    &-logo {
+      width: 40px;
+      margin: 0 0 0px 0;
+      display: block;
+      path {
+        fill: $white;
+      }
+    }
+  }
+  .__link {
+    display: flex;
+    box-sizing: border-box;
+    transition: border 400ms ease-out;
+    align-items: center;
+    justify-content: center;
+    color: $kindaWhite;
+    flex-wrap: wrap;
+    font-size: $s1;
+    border-left: 4px solid $black;
+    &:hover {
+      background-color: $slate;
+    }
+  }
+  .__icon {
+    color: $secondary;
+    padding: 0;
+    margin: 0 0 0 -4px;
+    font-size: $s3;
+    width: 100%;
+  }
+  .__bottom-icons {
+    position: absolute;
+    bottom: 12px;
+    width: $s8;
+    color: $secondary;
+    margin-left: auto;
+    font-size: $s3;
+    .__link {
+      border: 0;
+    }
+  }
+  .__message {
+    padding-bottom: $s4;
+  }
+  .__actions {
+    display: flex;
+  }
+}

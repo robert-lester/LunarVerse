@@ -1,0 +1,14 @@
+.edit-user {
+  &__actions {
+    justify-content: space-between;
+    .--right {
+      display: flex;
+    }
+  }
+  &__input {
+    width: 300px;
+  }
+  &__number-input {
+    width: 140px;
+  }
+}

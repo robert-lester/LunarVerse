@@ -1,0 +1,13 @@
+@import '../../../styles/variables';
+
+.l-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: $s3;
+  button {
+    margin-left: $s1;
+    &:first-of-type {
+      margin: 0;
+    }
+  }
+}

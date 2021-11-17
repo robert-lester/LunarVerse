@@ -1,0 +1,23 @@
+{
+  "defaultSeverity": "error",
+  "extends": ["tslint:recommended"],
+  "jsRules": {
+    "no-unused-expression": true
+  },
+  "rules": {
+    "quotemark": [true, "single"],
+    "ordered-imports": [false],
+    "no-console": [true, "log"],
+    "prefer-for-of": false,
+    "object-literal-sort-keys": false,
+    "max-line-length": [
+      true,
+      {
+        "limit": 200,
+        "ignore-pattern": "class [a-zA-Z]+ implements"
+      }
+    ],
+    "variable-name": false,
+  },
+  "rulesDirectory": []
+}

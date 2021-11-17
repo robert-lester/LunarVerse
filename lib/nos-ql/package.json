@@ -1,0 +1,27 @@
+{
+  "name": "@launchthat/nos-ql",
+  "version": "2.0.0",
+  "description": "Make using NoSQL fast 🏎",
+  "main": "NosQL.js",
+  "author": "Sean McMenamin <smcmenamin@belunar.com>",
+  "license": "ISC",
+  "scripts": {
+    "test": "./node_modules/.bin/nyc --reporter=html mocha",
+    "lint": "./node_modules/.bin/eslint NosQL.js exceptions/NullTableException.js",
+    "document": "./node_modules/.bin/jsdoc NosQL.js"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.504.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.2.1",
+    "babel-preset-env": "^1.6.1",
+    "chai": "^4.1.2",
+    "eslint": "^4.15.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "jsdoc": "^3.5.5",
+    "mocha": "^4.1.0",
+    "nyc": "^11.4.1"
+  }
+}

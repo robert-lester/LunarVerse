@@ -1,0 +1,705 @@
+service: lunar-core
+provider:
+  name: aws
+  stage: dev
+  runtime: nodejs10.x
+  profile: ${self:custom.profiles.${self:custom.stage}}
+  region: us-east-1
+  versionFunctions: false
+  memorySize: 1024
+  timeout: 30
+  deploymentBucket: ${self:custom.env.BUCKET_BASE}.${self:custom.stage}.cloudformation.template
+  environment: ${file(../config/${self:custom.stage}/env.yml):CORE}
+  role: ${self:custom.env.AWS_ARN_BASE}:role/shuttle-${self:custom.stage}
+  vpc:
+    securityGroupIds: ${file(../config/${self:custom.stage}/security-groups.yml)}
+    subnetIds: ${file(../config/${self:custom.stage}/subnets.yml)}
+
+custom:
+  webpack:
+    webpackConfig: 'webpack.config.js'
+    includeModules:
+      forceInclude:
+        - knex
+        - mysql
+      forceExclude:
+        - aws-sdk
+  customDomain:
+    domainName: ${self:custom.env.API_DOMAIN}
+    basePath: ${file(../config/${self:custom.stage}/env.yml):CORE.BASE_PATH}
+    stage: ${self:custom.stage}
+    createRoute53Record: ${self:custom.env.CREATE_ROUTE_53_RECORD}
+    enabled: ${self:custom.env.CREATE_CUSTOM_DOMAIN}
+  env: ${file(../config/${self:custom.stage}/env.yml):CORE}
+  stage: ${opt:stage, self:provider.stage}
+  slack:
+    # Configuration Description - https://github.com/awkward/serverless-plugin-slack
+    webhook_url: https://hooks.slack.com/services/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
+  profiles:
+    demo: default
+    production: default
+    qa: default
+    staging: default
+    integration: default
+    uplink-prod: uplink
+
+plugins:
+  - serverless-domain-manager
+  - serverless-offline
+  - serverless-webpack
+  - serverless-plugin-slack
+
+functions:
+  # Lambda authorizer
+  cognitoAuthorizer:
+    handler: handler.cognitoAuthorizer
+
+  createUplinkSubscriptionHandler:
+    events:
+      - http:
+          cors:
+            origins:
+              - '*.zuora.com'
+            headers:
+              - Authorization
+              - Charset
+              - Content-Encoding
+              - Content-Type
+          method: post
+          path: /subscriptions
+    handler: zuora/handlers.createUplinkSubscription
+
+  # Token methods
+  loginUser:
+    handler: handler.loginUser
+    events:
+      - http:
+          path: /login
+          method: post
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+              - charset
+      - http:
+          path: /mfa/submit
+          method: post
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+              - charset
+      - http:
+          path: /mfa/resend
+          method: post
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+              - charset
+  refreshUser:
+    handler: handler.refreshUser
+    events:
+      - http:
+          path: /refresh
+          method: post
+          authorizer: cognitoAuthorizer
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+              - charset
+  logoutUser:
+    handler: handler.logoutUser
+    events:
+      - http:
+          path: /logout
+          method: post
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  changePassword:
+    handler: handler.changePassword
+    events:
+      - http:
+          path: /password/change
+          method: post
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  forgotPassword:
+    handler: handlers/authFlow.forgotPassword
+    events:
+      - http:
+          path: /password/forgot
+          method: post
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+              - charset
+  confirmPassword:
+    handler: handler.confirmPassword
+    events:
+      - http:
+          path: /password/confirm
+          method: post
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+              - charset
+  registerMFA:
+    handler: handler.registerMFA
+    events:
+      - http:
+          path: /mfa/register
+          method: post
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+              - charset
+  # Organization methods
+  listOrgs:
+    handler: handler.listOrgs
+    events:
+      - http:
+          path: /orgs
+          method: get
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  createOrg:
+    handler: handlers/authFlow.createOrg
+    events:
+      - http:
+          path: /orgs
+          method: post
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  updateOrg:
+    handler: handlers/authFlow.updateOrg
+    events:
+      - http:
+          path: /orgs/{orgSlug}
+          method: post
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  readOrg:
+    handler: handler.readOrg
+    events:
+      - http:
+          path: /orgs/{orgSlug}
+          method: get
+          authorizer: cognitoAuthorizer
+          cors: true
+  deleteOrg:
+    handler: handler.deleteOrg
+    events:
+      - http:
+          path: /orgs/{orgSlug}
+          method: delete
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+
+  # Group methods
+  listGroups:
+    handler: handler.listGroups
+    events:
+      - http:
+          path: /groups
+          method: get
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  createGroup:
+    handler: handler.createGroup
+    events:
+      - http:
+          path: /groups
+          method: post
+          authorizer: cognitoAuthorizer
+          cors: true
+  readGroup:
+    handler: handler.readGroup
+    events:
+      - http:
+          path: /groups/{groupSlug}
+          method: get
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  updateGroup:
+    handler: handler.updateGroup
+    events:
+      - http:
+          path: /groups/{groupSlug}
+          method: patch
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  deleteGroup:
+    handler: handler.deleteGroup
+    events:
+      - http:
+          path: /groups/{groupSlug}
+          method: delete
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  addUserToGroup:
+    handler: handler.addUserToGroup
+    events:
+      - http:
+          path: /groups/{groupSlug}/users/{userEmail}
+          method: put
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  removeUserFromGroup:
+    handler: handler.removeUserFromGroup
+    events:
+      - http:
+          path: /groups/{groupSlug}/users/{userEmail}
+          method: delete
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+
+  # User methods
+  listUsers:
+    handler: handler.listUsers
+    events:
+      - http:
+          path: /users
+          method: get
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  listGroupUsers:
+    handler: handler.listGroupUsers
+    events:
+      - http:
+          path: /groups/{groupSlug}/users
+          method: get
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  checkUsersForLogin:
+    handler: handlers/userLoginVerification.handler
+    # 0900 EST every morning
+    events:
+      - schedule: cron(0 13 * * ? *)
+  createUser:
+    handler: handlers/authFlow.addUser
+    events:
+      - http:
+          path: /users
+          method: post
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  decryptUser:
+    handler: handlers/authFlow.decryptToken
+    events:
+      - http:
+          path: /invitation_tokens/validate
+          method: post
+          cors:
+            allowCredentials: false
+            origin: ${self:custom.env.CORS_ORIGIN}
+            headers:
+              - Origin
+              - Referer
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - X-Amz-Cf-Id
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - Access-Control-Allow-Methods
+              - charset
+  readUser:
+    handler: handler.readUser
+    events:
+      - http:
+          path: /users/{userEmail}
+          method: get
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  updateUser:
+    handler: handler.updateUser
+    events:
+      - http:
+          path: /users/{userEmail}
+          method: patch
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+  deleteUser:
+    handler: handler.deleteUser
+    events:
+      - http:
+          path: /users/{userEmail}
+          method: delete
+          authorizer: cognitoAuthorizer
+          cors:
+            origins:
+              - '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - charset
+            allowCredentials: false
+
+resources:  
+  Resources:
+    SMSRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${self:custom.env.API_RESOURCE_PREFIX}-sms-role
+        Path: /service-role/
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - cognito-idp.amazonaws.com
+              Action:
+                - sts:AssumeRole
+              Condition:
+                StringEquals:
+                  "sts:ExternalId": ${self:custom.env.SNS_EXTERNAL_ID}
+        ManagedPolicyArns:
+          - ${self:custom.env.AWS_ARN_BASE}:policy/service-role/${self:custom.env.SNS_COGNITO_POLICY}
+    GroupTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.env.API_RESOURCE_PREFIX}.groups
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.env.GROUP_TABLE_READ_CAPACITY}
+          WriteCapacityUnits: ${self:custom.env.GROUP_TABLE_WRITE_CAPACITY}
+    OrganizationTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.env.API_RESOURCE_PREFIX}.organizations
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.env.ORG_TABLE_READ_CAPACITY}
+          WriteCapacityUnits: ${self:custom.env.ORG_TABLE_WRITE_CAPACITY}
+    OrganizationKeyTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.env.API_RESOURCE_PREFIX}.organizationkeys
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.env.ORG_KEY_TABLE_READ_CAPACITY}
+          WriteCapacityUnits: ${self:custom.env.ORG_KEY_TABLE_WRITE_CAPACITY}
+    UserTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.env.API_RESOURCE_PREFIX}.users
+        AttributeDefinitions:
+          - AttributeName: username
+            AttributeType: S
+        KeySchema:
+          - AttributeName: username
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.env.USER_TABLE_READ_CAPACITY}
+          WriteCapacityUnits: ${self:custom.env.USER_TABLE_WRITE_CAPACITY}
+    LoginStatisticsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.env.API_RESOURCE_PREFIX}.loginstats
+        AttributeDefinitions:
+          - AttributeName: login
+            AttributeType: S
+        KeySchema:
+          - AttributeName: login
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: ${self:custom.env.LOGIN_STATS_TABLE_READ_CAPACITY}
+          WriteCapacityUnits: ${self:custom.env.LOGIN_STATS_TABLE_WRITE_CAPACITY}
